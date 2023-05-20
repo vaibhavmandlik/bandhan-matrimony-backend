@@ -7,6 +7,7 @@ var usersRouter = require('./routes/users');
 var loginRouter = require('./routes/login');
 var signupRouter = require('./routes/signup');
 var authenticateRouter = require('./routes/authenticate');
+var profileRouter = require('./routes/profile');
 
 var app = express();
 
@@ -21,5 +22,6 @@ app.use('/users', usersRouter);
 app.use('/login', loginRouter);
 app.use('/signup', signupRouter);
 app.use('/authenticate', authenticateRouter);
+app.use('/profile',profileRouter);
 
 module.exports = app;

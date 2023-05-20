@@ -20,8 +20,8 @@ router.post('/', function (req, res, next) {
           });
 
       var user = req.body;
-      var sql = `INSERT INTO users (name, username, password, email) VALUES (?, ?, ?, ?)`;
-      var values = [user.name, user.username, user.password, user.email];
+      var sql = `INSERT INTO users (firstName, lastName, username, password, email) VALUES (?, ?, ?, ?, ?)`;
+      var values = [user.firstName, user.lastName, user.email, user.password, user.email];
 
       connection.query(sql, values, async function (err, result) {
         if (err) {
@@ -35,6 +35,54 @@ router.post('/', function (req, res, next) {
 
         console.log("Number of records inserted: " + result.affectedRows);
 
+        var sql = `INSERT INTO user_address_details_master (userId, city) VALUES (?, ?)`;
+        var values = [result.insertId, user.addressDetails.city];
+  
+        connection.query(sql, values, async function (err, result) {
+          if (err) {
+            return res
+              .status(200)
+              .json({
+                success: false,
+                error: "Something went wrong: " + err,
+              })
+          }
+  
+          console.log("Number of records inserted: " + result.affectedRows);
+        });
+
+        var sql = `INSERT INTO user_personal_details_master (userId, primaryPhoneNumber) VALUES (?, ?)`;
+        var values = [result.insertId, user.personalDetails.primaryPhoneNumber];
+  
+        connection.query(sql, values, async function (err, result) {
+          if (err) {
+            return res
+              .status(200)
+              .json({
+                success: false,
+                error: "Something went wrong: " + err,
+              })
+          }
+  
+          console.log("Number of records inserted: " + result.affectedRows);
+        });
+
+        var sql = `INSERT INTO user_basic_details_master (userId, dateOfBirth) VALUES (?, ?)`;
+        var values = [result.insertId, user.basicDetails.dateOfBirth];
+  
+        connection.query(sql, values, async function (err, result) {
+          if (err) {
+            return res
+              .status(200)
+              .json({
+                success: false,
+                error: "Something went wrong: " + err,
+              })
+          }
+  
+          console.log("Number of records inserted: " + result.affectedRows);
+        });
+
         var userCode;
         isUserCodeVerified = false;
 
@@ -42,6 +90,7 @@ router.post('/', function (req, res, next) {
           userCode = userCodeGenerator();
           isUserCodeVerified = await verifyUserCode(userCode);
         }
+
 
         var sql = `UPDATE users SET userCode=?, createdBy=?, updatedBy=? WHERE id=?`;
         var values = [userCode, result.insertId, result.insertId, result.insertId];
@@ -59,7 +108,7 @@ router.post('/', function (req, res, next) {
           if (results.affectedRows > 0) {
             const userToken = {};
             userToken.id = result.insertId;
-            userToken.username = user.username;
+            userToken.username = user.email;
             userToken.userCode = userCode;
             userToken.email = user.email;
 

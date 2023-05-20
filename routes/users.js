@@ -105,4 +105,52 @@ router.post('/verify', function (req, res, next) {
   });
 });
 
+router.get('/delete', function (req, res, next) {
+
+  const id = req.query.id;
+
+  // simple query
+  connection.query(
+      'UPDATE `jobs` SET enabled="0" WHERE id=' + id,
+      function (err, results, fields) {
+          console.log(results);
+
+          if (results.affectedRows == 1) {
+              res
+                  .status(200)
+                  .json({
+                      success: true,
+                      data: "Deleted Successfully",
+                  });
+          }
+      });
+});
+
+router.post('/addUser', function (req, res, next) {
+
+  var user = req.body;
+  var sql = `INSERT INTO users (userCode, firstName, lastName, username, password, email, category, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  var values = [user.userCode, user.firstName, user.lastName, user.username, user.password, user.email, user.category, user.createdBy, user.updatedBy];
+
+  connection.query(sql, values, function (err, result) {
+      if (err) {
+          return res
+              .status(200)
+              .json({
+                  success: false,
+                  error: "Something went wrong: " + err,
+              });
+      };
+      console.log("Number of records inserted: " + result.affectedRows);
+      return res
+          .status(200)
+          .json({
+              success: true,
+              data: result
+          });
+
+  });
+
+});
+
 module.exports = router;

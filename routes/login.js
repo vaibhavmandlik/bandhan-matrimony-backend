@@ -52,35 +52,15 @@ router.post('/', function (req, res, next) {
                     return next(error);
                 }
 
-                sql = 'SELECT `users`.`twoFactAuth` FROM `users` WHERE `users`.`id`=?';
-                values = [userToken.id];
-
-                connection.query(sql, values, function (err, factResult) {
-                    if (err) {
-                        return res
-                            .status(200)
-                            .json({
-                                success: false,
-                                error: "Something went wrong: " + err,
-                            });
-                    }
-                    console.log("Fetched records: " + factResult.length);
-
-                    if (factResult[0].twoFactAuth) {
-                        
-                    }
-                    else {
-                        res
-                            .status(200)
-                            .json({
-                                success: true,
-                                data: {
-                                    userId: element.id,
-                                    token: token,
-                                },
-                            });
-                    }
-                });
+                res
+                    .status(200)
+                    .json({
+                        success: true,
+                        data: {
+                            data: userToken,
+                            token: token,
+                        },
+                    });
             });
         }
     );
