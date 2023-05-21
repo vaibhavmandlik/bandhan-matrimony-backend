@@ -1,9 +1,9 @@
 const express = require('express');
-const jwt = require("jsonwebtoken");
 
 var router = express.Router();
 
 var connection = require('./connection')
+
 
 router.post('/', function (req, res, next) {
 
@@ -63,6 +63,50 @@ router.post('/', function (req, res, next) {
         }
     );
 
+});
+
+router.get('/', function (req, res, next) {
+    let user = req.query.id;
+
+    connection.query(
+        'SELECT `userId` FROM `user_recent_visitors_details_master` WHERE enabled="1" AND `visitorId`=?', [user],
+        function (err, results, fields) {
+            if (err) {
+                return res
+                    .status(200)
+                    .json({
+                        success: true,
+                        status: "No visitors yet",
+                    });
+            }
+
+            let visitors = [];
+            results.forEach(element => {
+                visitors.push(element.userId);
+            });
+
+            connection.query(
+                'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [visitors],
+                function (err, results, fields) {
+                    if (err) {
+                        return res
+                            .status(200)
+                            .json({
+                                success: true,
+                                status: err.message,
+                            });
+                    }
+
+                    return res
+                        .status(200)
+                        .json({
+                            success: true,
+                            data: results
+                        });
+                })
+
+        }
+    );
 });
 
 module.exports = router;
