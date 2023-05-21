@@ -55,7 +55,7 @@ router.post('/', function (req, res, next) {
                     .json({
                         success: true,
                         data: {
-                            data: userToken,
+                            userId: element.id,
                             token: token,
                         },
                     });
