@@ -618,6 +618,31 @@ router.get('/', function (req, res, next) {
 
 });
 
+router.post('/shortlisted', function (req, res, next) {
+
+    const user = req.body;
+    var sql = `INSERT INTO user_shortlisted_details_master (userId, shortlistedId, createdBy, updatedBy) VALUES (?, ?, ?, ?)`;
+    var values = [user.userId, user.shortlistedId, user.userId, user.userId];
+
+    connection.query(sql, values, function (err, result) {
+        if (err)
+            response.error = err;
+        else {
+            console.log("Number of records deleted: " + result.affectedRows);
+
+            user.id = result.insertId;
+            response.user = user;
+        }
+        return res
+            .status(200)
+            .json({
+                success: true,
+                data: response
+            });
+    });
+
+});
+
 router.get('/shortlisted', function (req, res, next) {
     let user = req.query.id;
 
@@ -668,5 +693,158 @@ router.get('/shortlisted', function (req, res, next) {
         }
     );
 });
+
+router.delete('/shortlisted', function (req, res, next) {
+
+
+    const id = req.query.id;
+    const sid = req.query.sid;
+
+    var sql = 'SELECT * FROM `user_shortlisted_details_master` WHERE userId=? AND shortlistedId=? AND enabled="1"';
+    var values = [id, sid];
+
+    connection.query(sql, values, function (err, result) {
+        if (err)
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    status: err.message
+                });
+
+        console.log("Number of records found: " + result.length);
+
+        if (result.length > 0) {
+            var sql = 'UPDATE `user_shortlisted_details_master` SET  enabled="0", updatedBy=? WHERE userId=? AND shortlistedId=?';
+            var values = [id, id, sid];
+
+            connection.query(sql, values, function (err, result) {
+                if (err)
+                    return res
+                        .status(400)
+                        .json({
+                            success: false,
+                            status: err.message
+                        });
+
+                console.log("Number of records deleted: " + result.affectedRows);
+
+                return res
+                    .status(200)
+                    .json({
+                        success: true,
+                        data: result.affectedRows
+                    });
+            });
+        }
+        else
+            return res
+                .status(200)
+                .json({
+                    success: true,
+                    status: "No data found"
+                });
+    });
+
+
+
+});
+
+router.get('/interest', function (req, res, next) {
+    let user = req.query.id;
+    let interestSent = [];
+    let interestReceived = [];
+
+    connection.query(
+        'SELECT `interestedInId` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?', [user],
+        function (err, results, fields) {
+            if (err)
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        status: err.message,
+                    });
+
+            else if (results.length > 0) {
+
+                let sentIds = [];
+                results.forEach(element => {
+                    sentIds.push(element.interestedInId);
+                });
+
+                connection.query(
+                    'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [sentIds],
+                    function (err, results, fields) {
+                        if (err) {
+                            return res
+                                .status(400)
+                                .json({
+                                    success: true,
+                                    status: err.message,
+                                });
+                        }
+
+                        interestSent = results;
+                    });
+            }
+        }
+    );
+
+    connection.query(
+        'SELECT `userId` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?', [user],
+        function (err, results, fields) {
+            if (err)
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        status: err.message,
+                    });
+
+            else if (results.length > 0) {
+
+                let sentIds = [];
+                results.forEach(element => {
+                    sentIds.push(element.userId);
+                });
+
+                connection.query(
+                    'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [sentIds],
+                    function (err, results, fields) {
+                        if (err)
+                            return res
+                                .status(400)
+                                .json({
+                                    success: true,
+                                    status: err.message,
+                                });
+
+                        interestReceived = results;
+
+                        return res
+                            .status(200)
+                            .json({
+                                success: true,
+                                data: {
+                                    sent: interestSent,
+                                    received: interestReceived
+                                }
+                            });
+                    });
+            } else
+                return res
+                    .status(200)
+                    .json({
+                        success: true,
+                        status: "No records found"
+                    });
+        }
+    );
+});
+
+
+
+
 
 module.exports = router;

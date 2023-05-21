@@ -1,3 +1,4 @@
+const { response } = require('express');
 const express = require('express');
 
 var router = express.Router();
@@ -8,61 +9,26 @@ var connection = require('./connection')
 router.post('/', function (req, res, next) {
 
     const user = req.body;
+    var sql = `INSERT INTO user_recent_visitors_details_master (userId, visitorId, createdBy) VALUES (?, ?, ?)`;
+    var values = [user.userId, user.visitorId, user.userId, user.userId];
 
-    // simple query
-    connection.query(
-        'SELECT * FROM `users` WHERE username=?', [user.username],
-        function (err, results, fields) {
-            console.log(results[0]);
-            if (results.length == 0) {
-                return res
-                    .status(200)
-                    .json({
-                        success: false,
-                        error: "User does not exists",
-                    });
-            }
+    connection.query(sql, values, function (err, result) {
+        if (err)
+            response.error = err;
+        else {
+            console.log("Number of records deleted: " + result.affectedRows);
 
-            if (results[0].password != user.password) {
-                return res.status(200).json({ success: false, error: "Incorrect password", });
-            }
-
-            results.forEach(element => {
-
-                const userToken = {};
-                userToken.username = element.username
-                userToken.id = element.id;
-                userToken.category = element.category;
-                userToken.email = element.email;
-                userToken.name = element.name;
-
-                let token;
-                try {
-                    //Creating jwt token
-                    token = jwt.sign(
-                        { userId: element.id, userData: userToken },
-                        "venture",
-                        { expiresIn: "1h" }
-                    );
-                } catch (err) {
-                    console.log(err);
-                    const error = new Error("Error! Something went wrong.");
-                    return next(error);
-                }
-
-                res
-                    .status(200)
-                    .json({
-                        success: true,
-                        data: {
-                            data: userToken,
-                            token: token,
-                        },
-                    });
-            });
+            user.id = result.insertId;
+            response.user = user;
         }
-    );
-
+        return res
+        .status(200)
+        .json({
+            success: true,
+            data: response
+        });
+     });
+    
 });
 
 router.get('/', function (req, res, next) {
