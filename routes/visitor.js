@@ -71,14 +71,22 @@ router.get('/', function (req, res, next) {
     connection.query(
         'SELECT `userId` FROM `user_recent_visitors_details_master` WHERE enabled="1" AND `visitorId`=?', [user],
         function (err, results, fields) {
-            if (err) {
+            if (err)
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        status: err.message,
+                    });
+
+            else if (results.length == 0)
                 return res
                     .status(200)
                     .json({
                         success: true,
-                        status: "No visitors yet",
+                        status: "No profile visitors yet",
+                        data: []
                     });
-            }
 
             let visitors = [];
             results.forEach(element => {
