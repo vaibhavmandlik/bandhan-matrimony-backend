@@ -755,9 +755,10 @@ router.get('/interest', function (req, res, next) {
     let interestSent = [];
     let interestReceived = [];
 
+    // Query for interest request sent
     connection.query(
-        'SELECT `interestedInId` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?', [user],
-        function (err, results, fields) {
+        'SELECT `interestedInId`, `isAccepted` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?', [user],
+        function (err, result, fields) {
             if (err)
                 return res
                     .status(400)
@@ -766,10 +767,10 @@ router.get('/interest', function (req, res, next) {
                         status: err.message,
                     });
 
-            else if (results.length > 0) {
+            else if (result.length > 0) {
 
                 let sentIds = [];
-                results.forEach(element => {
+                result.forEach(element => {
                     sentIds.push(element.interestedInId);
                 });
 
@@ -785,15 +786,24 @@ router.get('/interest', function (req, res, next) {
                                 });
                         }
 
+                        results.map(m => {
+                            let interestRequest = result.filter(a => a.interestedInId == m.id);
+
+                            m.isAccepted = interestRequest[0].isAccepted;
+
+                            return m;
+                        });
+
                         interestSent = results;
                     });
             }
         }
     );
 
+    // Query for interest request received
     connection.query(
-        'SELECT `userId` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?', [user],
-        function (err, results, fields) {
+        'SELECT `userId`, `isAccepted` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?', [user],
+        function (err, result, fields) {
             if (err)
                 return res
                     .status(400)
@@ -802,15 +812,15 @@ router.get('/interest', function (req, res, next) {
                         status: err.message,
                     });
 
-            else if (results.length > 0) {
+            else if (result.length > 0) {
 
-                let sentIds = [];
-                results.forEach(element => {
-                    sentIds.push(element.userId);
+                let received = [];
+                result.forEach(element => {
+                    received.push(element.userId);
                 });
 
                 connection.query(
-                    'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [sentIds],
+                    'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [received],
                     function (err, results, fields) {
                         if (err)
                             return res
@@ -819,6 +829,14 @@ router.get('/interest', function (req, res, next) {
                                     success: true,
                                     status: err.message,
                                 });
+
+                        results.map(m => {
+                            let interestRequest = result.filter(a => a.userId == m.id);
+
+                            m.isAccepted = interestRequest[0].isAccepted;
+
+                            return m;
+                        });
 
                         interestReceived = results;
 
