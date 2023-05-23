@@ -861,8 +861,81 @@ router.get('/interest', function (req, res, next) {
     );
 });
 
+router.get('/matches', function (req, res, next) {
+    let id = req.query.id;
 
+    // Query for interest request sent
+    connection.query(
+        'SELECT `id` FROM `users` WHERE enabled="1" AND  `id`!=?', [id],
+        function (err, result, fields) {
+            if (err)
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        status: err.message,
+                    });
 
+            else if (result.length > 0) {
 
+                let userId = [];
+                result.forEach(element => {
+                    userId.push(element.id);
+                });
+
+                connection.query(
+                    'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                    function (err, results, fields) {
+                        if (err) {
+                            return res
+                                .status(400)
+                                .json({
+                                    success: true,
+                                    status: err.message,
+                                });
+                        }
+
+                        return res
+                            .status(200)
+                            .json({
+                                success: true,
+                                data: results
+                            });
+                    });
+            } else
+                return res
+                    .status(200)
+                    .json({
+                        success: true,
+                        status: "No matches found"
+                    });
+        });
+
+});
+
+router.get('/filter', function (req, res, next) {
+    let userCode = req.query.userCode;
+
+    // Query for interest request sent
+    connection.query(
+        'SELECT `userCode` FROM `users` WHERE enabled="1" AND  `userCode`=?', [userCode],
+        function (err, result, fields) {
+            if (err)
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        status: err.message,
+                    });
+            else(result.length > 0) 
+                return res
+                    .status(200)
+                    .json({
+                        success: true,
+                        data: result.affectedRows
+                    });
+        });
+
+});
 
 module.exports = router;
