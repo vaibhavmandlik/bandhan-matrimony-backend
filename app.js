@@ -1,3 +1,4 @@
+const functions = require("firebase-functions")
 var express = require('express');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
@@ -26,4 +27,4 @@ app.use('/authenticate', authenticateRouter);
 app.use('/profile',profileRouter);
 app.use('/visitor',visitorRouter);
 
-module.exports = app;
+exports.app = functions.https.onRequest(app);
