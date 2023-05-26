@@ -6,11 +6,11 @@ const jwt = require("jsonwebtoken");
 var router = express.Router();
 
 var connection = require('./connection');
-const { response } = require('express');
+
+var response = { error: { basicDetails: '', additionalDetails: '', addressDetails: '', educationalDetails: '', kundaliDetails: '', medicalDetails: '', personalDetails: '', personalDocument: '', professionalDetails: '' }, basicDetails: {}, additionalDetails: {}, addressDetails: {}, educationalDetails: {}, kundaliDetails: {}, medicalDetails: {}, personalDetails: {}, personalDocument: {}, professionalDetails: {} };
 
 router.post('/', function (req, res, next) {
 
-    var response = { error: { basicDetails: '', additionalDetails: '', addressDetails: '', educationalDetails: '', kundaliDetails: '', medicalDetails: '', personalDetails: '', personalDocument: '', professionalDetails: '' }, basicDetails: {}, additionalDetails: {}, addressDetails: {}, educationalDetails: {}, kundaliDetails: {}, medicalDetails: {}, personalDetails: {}, personalDocument: {}, professionalDetails: {} };
     var user = req.body;
     var basicDetails = user.basicDetails;
     var sql = `INSERT INTO user_basic_details_master (userId, height, weight, bodyTone, placeOfBirth, timeOfBirth, dateOfBirth, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
@@ -918,8 +918,8 @@ router.get('/filter', function (req, res, next) {
 
     // Query for interest request sent
     connection.query(
-        'SELECT `userCode` FROM `users` WHERE enabled="1" AND  `userCode`=?', [userCode],
-        function (err, result, fields) {
+        'SELECT * FROM `users` WHERE enabled="1" AND `userCode`=?', [userCode],
+        async function (err, userResult, fields) {
             if (err)
                 return res
                     .status(400)
@@ -927,15 +927,48 @@ router.get('/filter', function (req, res, next) {
                         success: false,
                         status: err.message,
                     });
-            else(result.length > 0) 
+
+            if (userResult.length > 0) {
+
+                let fileterResponse = { error: { basicDetails: '', additionalDetails: '', addressDetails: '', educationalDetails: '', kundaliDetails: '', medicalDetails: '', personalDetails: '', personalDocument: '', professionalDetails: '' }, basicDetails: {}, additionalDetails: {}, addressDetails: {}, educationalDetails: {}, kundaliDetails: {}, medicalDetails: {}, personalDetails: {}, personalDocument: {}, professionalDetails: {} };
+
+                ["basic", "additional", "address", "educational", "kundali", "medical", "personal", "professional"].forEach((table, index) => {
+                    console.log(table);
+
+                    connection.query(
+                        'SELECT * FROM `user_' + table + '_details_master` WHERE enabled="1" AND `userId`=?', [userResult[0].id],
+                        async function (err, additionalDetailsResult, fields) {
+                            if (err)
+                                fileterResponse.error[table + "Details"] = err.message;
+
+                            console.log(additionalDetailsResult);
+
+                            if (additionalDetailsResult.length > 0)
+                                fileterResponse[table + "Details"] = additionalDetailsResult[0];
+                            else
+                                fileterResponse.error[table + "Details"] = "User additional details not found";
+
+                                if (index >= 7)
+                                    return res
+                                        .status(200)
+                                        .json({
+                                            success: true,
+                                            data: fileterResponse,
+                                        });
+                        });
+                        
+                });
+
+
+            }
+            else
                 return res
                     .status(200)
                     .json({
                         success: true,
-                        data: result.affectedRows
+                        status: "User not found"
                     });
         });
 
 });
-
 module.exports = router;
