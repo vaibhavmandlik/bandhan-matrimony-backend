@@ -39,6 +39,13 @@ router.get('/delete', function (req, res, next) {
     'UPDATE `users` SET enabled="0" WHERE id=' + id,
     function (err, results, fields) {
       console.log(results);
+      if (err)
+        return res
+          .status(200)
+          .json({
+            success: false,
+            error: "Something went wrong: " + err,
+          })
 
       if (results.affectedRows == 1) {
         res
@@ -111,19 +118,19 @@ router.get('/delete', function (req, res, next) {
 
   // simple query
   connection.query(
-      'UPDATE `jobs` SET enabled="0" WHERE id=' + id,
-      function (err, results, fields) {
-          console.log(results);
+    'UPDATE `jobs` SET enabled="0" WHERE id=' + id,
+    function (err, results, fields) {
+      console.log(results);
 
-          if (results.affectedRows == 1) {
-              res
-                  .status(200)
-                  .json({
-                      success: true,
-                      data: "Deleted Successfully",
-                  });
-          }
-      });
+      if (results.affectedRows == 1) {
+        res
+          .status(200)
+          .json({
+            success: true,
+            data: "Deleted Successfully",
+          });
+      }
+    });
 });
 
 router.post('/addUser', function (req, res, next) {
@@ -133,21 +140,21 @@ router.post('/addUser', function (req, res, next) {
   var values = [user.userCode, user.firstName, user.lastName, user.username, user.password, user.email, user.category, user.createdBy, user.updatedBy];
 
   connection.query(sql, values, function (err, result) {
-      if (err) {
-          return res
-              .status(200)
-              .json({
-                  success: false,
-                  error: "Something went wrong: " + err,
-              });
-      };
-      console.log("Number of records inserted: " + result.affectedRows);
+    if (err) {
       return res
-          .status(200)
-          .json({
-              success: true,
-              data: result
-          });
+        .status(200)
+        .json({
+          success: false,
+          error: "Something went wrong: " + err,
+        });
+    };
+    console.log("Number of records inserted: " + result.affectedRows);
+    return res
+      .status(200)
+      .json({
+        success: true,
+        data: result
+      });
 
   });
 
