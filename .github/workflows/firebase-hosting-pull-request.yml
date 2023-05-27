@@ -12,5 +12,5 @@ jobs:
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_VENTURE_MATRIMONY }}'
-          projectId: venture-matrimony
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_VENTURE_MATRIMONY_3C397 }}'
+          projectId: venture-matrimony-3c397
