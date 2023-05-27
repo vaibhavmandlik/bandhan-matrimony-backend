@@ -2,16 +2,16 @@ const express = require("express");
 const functions = require("firebase-functions");
 const app = express();
 
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var cors = require('cors');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const cors = require('cors');
 
-var usersRouter = require('../routes/users');
-var loginRouter = require('../routes/login');
-var signupRouter = require('../routes/signup');
-var authenticateRouter = require('../routes/authenticate');
-var profileRouter = require('../routes/profile');
-var visitorRouter = require('../routes/visitor');
+const usersRouter = require('../routes/users');
+const loginRouter = require('../routes/login');
+const signupRouter = require('../routes/signup');
+const authenticateRouter = require('../routes/authenticate');
+const profileRouter = require('../routes/profile');
+const visitorRouter = require('../routes/visitor');
 
 app.use(logger('dev'));
 app.use(express.json({ limit: '50mb' }));
