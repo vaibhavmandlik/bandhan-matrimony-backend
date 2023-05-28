@@ -998,12 +998,16 @@ router.post('/filter', function (req, res, next) {
                                             status: err.message,
                                         });
                                 }
-                                responseData = results;
+
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
                             });
                     }
                 });
 
         }
+
         if ("fromWeight" in req.body && "toWeight" in req.body) {
             connection.query(
                 'SELECT `userId` FROM `user_basic_details_master` WHERE `weight` <= ? OR `weight`>=?', [req.body.fromWeight, req.body.toWeight],
@@ -1032,15 +1036,22 @@ router.post('/filter', function (req, res, next) {
                                             status: err.message,
                                         });
                                 }
-                                responseData = results;
+
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
                             });
                     }
                 });
 
         }
+
         if ("location" in req.body) {
+
+            let locations = req.body.location.split(",");
+
             connection.query(
-                'SELECT `userId` FROM `user_address_details_master` WHERE `city` IN (?)', [req.body.location],
+                'SELECT `userId` FROM `user_address_details_master` WHERE `city` IN (?)', [locations],
                 async function (err, userResult, fields) {
                     if (err)
                         return res
@@ -1065,19 +1076,17 @@ router.post('/filter', function (req, res, next) {
                                             success: false,
                                             status: err.message,
                                         });
-                                    }
-                                    responseData = results;
-                                    return res
-                                                .status(200)
-                                                .json({
-                                                    success: true,
-                                                    data: responseData
-                                                });
+                                }
+
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
                             });
                     }
                 });
 
         }
+
         if ("religion" in req.body) {
             connection.query(
                 'SELECT `userId` FROM `user_kundali_details_master` WHERE `religion` = ?', [req.body.religion],
@@ -1106,19 +1115,493 @@ router.post('/filter', function (req, res, next) {
                                             status: err.message,
                                         });
                                 }
-                                responseData = results;
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+                            });
+                    }
+                });
+        }
+
+        if ("maritalStatus" in req.body) {
+            connection.query(
+                'SELECT `userId` FROM `user_personal_details_master` WHERE `marriageType` = ?', [req.body.maritalStatus],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("casteSubcaste" in req.body) {
+
+            let a = req.body.casteSubcaste.split(",");
+
+            connection.query(
+                'SELECT `userId` FROM `user_kundali_details_master` WHERE `caste` = ? AND `subCaste` = ?', [a[0], a[1]],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("motherTongue" in req.body) {
+
+            connection.query(
+                'SELECT `userId` FROM `user_personal_details_master` WHERE `motherTongue` = ?', [req.body.motherTongue],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("bornAfter" in req.body) {
+
+            connection.query(
+                'SELECT `userId` FROM `user_basic_details_master` WHERE YEAR(`dateOfBirth`) >= ?', [req.body.bornAfter],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("mangalik" in req.body) {
+
+            connection.query(
+                'SELECT `userId` FROM `user_kundali_details_master` WHERE manglik = ?', [req.body.mangalik],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+        if ("mangalik" in req.body) {
+
+            connection.query(
+                'SELECT `userId` FROM `user_kundali_details_master` WHERE manglik = ?', [req.body.mangalik],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("graduation" in req.body || "postGraduation" in req.body) {
+
+            connection.query(
+                'SELECT `userId` FROM `user_educational_details_master` WHERE (educationType="grad" OR educationType="postGrad") AND ((qualification = ? OR stream = ?) OR (qualification = ?))', [req.body.graduation, req.body.stream, req.body.postGraduation],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("income" in req.body) {
+            connection.query(
+                'SELECT `userId` FROM `user_professional_details_master` WHERE incomeRange = ?', [req.body.income],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("houseType" in req.body) {
+
+            let h = req.body.houseType == "Owned" ? '1' : '2';
+
+            connection.query(
+                'SELECT `userId` FROM `user_additional_details_master` WHERE houseType = ?', [h],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("dietType" in req.body) {
+
+            let h = req.body.dietType == "Non Vegetarian" ? 'Non-Veg' : 'Veg';
+
+            connection.query(
+                'SELECT `userId` FROM `user_additional_details_master` WHERE foodType = ?', [h],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("alcoholic" in req.body || "smoking" in req.body) {
+
+            connection.query(
+                'SELECT `userId` FROM `user_medical_details_master` WHERE (alcoholic = ? OR smoking = ? )', [req.body.alcoholic, req.body.smoking],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
+                            });
+                    }
+                });
+        }
+
+        if ("medical" in req.body) {
+
+            let m = req.body.medical.split(",");
+
+            connection.query(
+                'SELECT `userId` FROM `user_medical_details_master` WHERE medicalHistory IN (?)', [m],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(results, responseData);
+                                }
+
                                 return res
                                     .status(200)
                                     .json({
                                         success: true,
                                         data: responseData
                                     });
+
                             });
                     }
                 });
-
         }
     }
 
 });
 module.exports = router;
+
+function checkDuplicateResponse(results, responseData) {
+    results.forEach(u => {
+        let a = responseData.filter(r => r.id == u.id);
+
+        if (a.length == 0)
+            responseData.push(u);
+    });
+
+    return responseData;
+}

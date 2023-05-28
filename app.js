@@ -27,6 +27,5 @@ app.use('/authenticate', authenticateRouter);
 app.use('/profile',profileRouter);
 app.use('/visitor',visitorRouter);
 app.use('/otp', otprouter);
-app.listen(3000);
 
 module.exports = app;
