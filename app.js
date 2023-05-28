@@ -9,6 +9,7 @@ var signupRouter = require('./routes/signup');
 var authenticateRouter = require('./routes/authenticate');
 var profileRouter = require('./routes/profile');
 var visitorRouter = require('./routes/visitor');
+var otprouter = require('./routes/otp');
 
 var app = express();
 
@@ -25,5 +26,7 @@ app.use('/signup', signupRouter);
 app.use('/authenticate', authenticateRouter);
 app.use('/profile',profileRouter);
 app.use('/visitor',visitorRouter);
+app.use('/otp', otprouter);
+app.listen(3000);
 
 module.exports = app;

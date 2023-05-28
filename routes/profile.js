@@ -913,40 +913,41 @@ router.get('/matches', function (req, res, next) {
 
 });
 
-router.get('/filter', function (req, res, next) {
-    let userCode = req.query.userCode;
+router.post('/filter', function (req, res, next) {
+    let responseData = [];
+    if ("userCode" in req.body) {
+        let userCode = req.body.userCode;
 
-    // Query for interest request sent
-    connection.query(
-        'SELECT * FROM `users` WHERE enabled="1" AND `userCode`=?', [userCode],
-        async function (err, userResult, fields) {
-            if (err)
-                return res
-                    .status(400)
-                    .json({
-                        success: false,
-                        status: err.message,
-                    });
+        connection.query(
+            'SELECT * FROM `users` WHERE enabled="1" AND `userCode`=?', [userCode],
+            async function (err, userResult, fields) {
+                if (err)
+                    return res
+                        .status(400)
+                        .json({
+                            success: false,
+                            status: err.message,
+                        });
 
-            if (userResult.length > 0) {
+                if (userResult.length > 0) {
 
-                let fileterResponse = { error: { basicDetails: '', additionalDetails: '', addressDetails: '', educationalDetails: '', kundaliDetails: '', medicalDetails: '', personalDetails: '', personalDocument: '', professionalDetails: '' }, basicDetails: {}, additionalDetails: {}, addressDetails: {}, educationalDetails: {}, kundaliDetails: {}, medicalDetails: {}, personalDetails: {}, personalDocument: {}, professionalDetails: {} };
+                    let fileterResponse = { error: { basicDetails: '', additionalDetails: '', addressDetails: '', educationalDetails: '', kundaliDetails: '', medicalDetails: '', personalDetails: '', personalDocument: '', professionalDetails: '' }, basicDetails: {}, additionalDetails: {}, addressDetails: {}, educationalDetails: {}, kundaliDetails: {}, medicalDetails: {}, personalDetails: {}, personalDocument: {}, professionalDetails: {} };
 
-                ["basic", "additional", "address", "educational", "kundali", "medical", "personal", "professional"].forEach((table, index) => {
-                    console.log(table);
+                    ["basic", "additional", "address", "educational", "kundali", "medical", "personal", "professional"].forEach((table, index) => {
+                        console.log(table);
 
-                    connection.query(
-                        'SELECT * FROM `user_' + table + '_details_master` WHERE enabled="1" AND `userId`=?', [userResult[0].id],
-                        async function (err, additionalDetailsResult, fields) {
-                            if (err)
-                                fileterResponse.error[table + "Details"] = err.message;
+                        connection.query(
+                            'SELECT * FROM `user_' + table + '_details_master` WHERE enabled="1" AND `userId`=?', [userResult[0].id],
+                            async function (err, additionalDetailsResult, fields) {
+                                if (err)
+                                    fileterResponse.error[table + "Details"] = err.message;
 
-                            console.log(additionalDetailsResult);
+                                console.log(additionalDetailsResult);
 
-                            if (additionalDetailsResult.length > 0)
-                                fileterResponse[table + "Details"] = additionalDetailsResult[0];
-                            else
-                                fileterResponse.error[table + "Details"] = "User additional details not found";
+                                if (additionalDetailsResult.length > 0)
+                                    fileterResponse[table + "Details"] = additionalDetailsResult[0];
+                                else
+                                    fileterResponse.error[table + "Details"] = "User additional details not found";
 
                                 if (index >= 7)
                                     return res
@@ -955,20 +956,169 @@ router.get('/filter', function (req, res, next) {
                                             success: true,
                                             data: fileterResponse,
                                         });
+                            });
+
+                    });
+                }
+                else
+                    return res
+                        .status(200)
+                        .json({
+                            success: true,
+                            status: "User not found"
                         });
-                        
+            });
+    } else {
+
+        if ("fromHeight" in req.body && "toHeight" in req.body) {
+            connection.query(
+                'SELECT `userId` FROM `user_basic_details_master` WHERE `height` <= ? OR `height`>=?', [req.body.fromHeight, req.body.toHeight],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                responseData = results;
+                            });
+                    }
                 });
 
+        }
+        if ("fromWeight" in req.body && "toWeight" in req.body) {
+            connection.query(
+                'SELECT `userId` FROM `user_basic_details_master` WHERE `weight` <= ? OR `weight`>=?', [req.body.fromWeight, req.body.toWeight],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
 
-            }
-            else
-                return res
-                    .status(200)
-                    .json({
-                        success: true,
-                        status: "User not found"
-                    });
-        });
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                responseData = results;
+                            });
+                    }
+                });
+
+        }
+        if ("location" in req.body) {
+            connection.query(
+                'SELECT `userId` FROM `user_address_details_master` WHERE `city` IN (?)', [req.body.location],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                    }
+                                    responseData = results;
+                                    return res
+                                                .status(200)
+                                                .json({
+                                                    success: true,
+                                                    data: responseData
+                                                });
+                            });
+                    }
+                });
+
+        }
+        if ("religion" in req.body) {
+            connection.query(
+                'SELECT `userId` FROM `user_kundali_details_master` WHERE `religion` = ?', [req.body.religion],
+                async function (err, userResult, fields) {
+                    if (err)
+                        return res
+                            .status(400)
+                            .json({
+                                success: false,
+                                status: err.message,
+                            });
+                    else if (userResult.length > 0) {
+                        let userId = [];
+                        userResult.forEach(element => {
+                            userId.push(element.userId);
+                        });
+
+                        connection.query(
+                            'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)', [userId],
+                            async function (err, results, fields) {
+                                if (err) {
+                                    return res
+                                        .status(400)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                responseData = results;
+                                return res
+                                    .status(200)
+                                    .json({
+                                        success: true,
+                                        data: responseData
+                                    });
+                            });
+                    }
+                });
+
+        }
+    }
 
 });
 module.exports = router;
