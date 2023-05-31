@@ -718,7 +718,7 @@ router.post("/shortlisted", function (req, res, next) {
     connection.query(sql, values, function (err, result) {
         if (err) response.error = err;
         else {
-            console.log("Number of records deleted: " + result.affectedRows);
+            console.log("Number of records Inserted: " + result.affectedRows);
 
             user.id = result.insertId;
             response.user = user;
@@ -920,6 +920,40 @@ router.get("/interest", function (req, res, next) {
                 });
         }
     );
+});
+
+router.put("/interest", function (req, res, next) {
+    var id = req.body.id;
+    var action = req.body.action;
+    var sql = "SELECT `id` FROM `user_interest_details_master` WHERE `id`=?";
+    var values = [id];
+
+    connection.query(sql, values, function (err, result) {
+        if (err) response.error = err;
+        else if (result.length == 0) {
+            console.log("Id not found");
+            return res.status(400).json({
+                success: false,
+                message: "Id Not Found"
+            });
+            
+        }
+        else if (result.length > 0) {
+            var sql = "UPDATE `user_interest_details_master` SET  isAccepted=? WHERE id=?";
+            var values = [action, id];
+
+            connection.query(sql, values, function (err, result) {
+                if (err) response.error = err;
+                else {
+                    console.log("Number of records updated: " + result.affectedRows);
+                    return res.status(200).json({
+                        success: true,
+                    });
+                }
+
+            });
+        }
+    });
 });
 
 router.get("/matches", function (req, res, next) {

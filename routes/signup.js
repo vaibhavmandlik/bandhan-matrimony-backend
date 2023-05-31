@@ -91,9 +91,9 @@ router.post('/', function (req, res, next) {
           isUserCodeVerified = await verifyUserCode(userCode);
         }
 
-
-        var sql = `UPDATE users SET userCode=?, createdBy=?, updatedBy=? WHERE id=?`;
-        var values = [userCode, result.insertId, result.insertId, result.insertId];
+        let refferCode = userCodeGenerator();
+        var sql = `UPDATE users SET userCode=?, refferCode=?, createdBy=?, updatedBy=? WHERE id=?`;
+        var values = [userCode, refferCode, result.insertId, result.insertId, result.insertId];
 
         connection.query(sql, values, function (err, results, fields) {
           if (err) {
@@ -111,6 +111,7 @@ router.post('/', function (req, res, next) {
             userToken.username = user.email;
             userToken.userCode = userCode;
             userToken.email = user.email;
+            userToken.refferCode = refferCode;
 
             let token;
 
