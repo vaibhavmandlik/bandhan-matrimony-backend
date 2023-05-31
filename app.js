@@ -10,6 +10,7 @@ var authenticateRouter = require('./routes/authenticate');
 var profileRouter = require('./routes/profile');
 var visitorRouter = require('./routes/visitor');
 var otprouter = require('./routes/otp');
+var reportrouter = require('./routes/report')
 
 var app = express();
 
@@ -27,5 +28,6 @@ app.use('/authenticate', authenticateRouter);
 app.use('/profile',profileRouter);
 app.use('/visitor',visitorRouter);
 app.use('/otp', otprouter);
+app.use('/report',reportrouter);
 
 module.exports = app;
