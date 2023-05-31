@@ -35,7 +35,7 @@ router.get('/', function (req, res, next) {
     let user = req.query.id;
 
     connection.query(
-        'SELECT `userId` FROM `user_recent_visitors_details_master` WHERE enabled="1" AND `visitorId`=?', [user],
+        'SELECT `userId` FROM `user_recent_visitors_details_master` WHERE `visitorId`=?', [user],
         function (err, results, fields) {
             if (err)
                 return res

@@ -33,7 +33,7 @@ var response = {
 router.post("/", function (req, res, next) {
     var user = req.body;
     var basicDetails = user.basicDetails;
-    var sql = `INSERT INTO user_basic_details_master (userId, height, weight, bodyTone, placeOfBirth, timeOfBirth, dateOfBirth, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    var sql = `INSERT INTO user_basic_details_master (userId, height, weight, bodyTone, placeOfBirth, timeOfBirth, dateOfBirth, createdBy, updatedBy) [userId] (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     var values = [
         basicDetails.userId,
         basicDetails.height,
@@ -659,6 +659,7 @@ router.put("/", function (req, res, next) {
 router.get("/", function (req, res, next) {
     var response = {
         error: {
+            message: "",
             basicDetails: "",
             additionalDetails: "",
             addressDetails: "",
@@ -669,6 +670,10 @@ router.get("/", function (req, res, next) {
             personalDocument: "",
             professionalDetails: "",
         },
+        id: null,
+        userCode: null,
+        firstName: null,
+        lastName: null,
         basicDetails: {},
         additionalDetails: {},
         addressDetails: {},
@@ -681,127 +686,28 @@ router.get("/", function (req, res, next) {
     };
 
     const userId = req.query.userId;
+    const userCode = req.query.userCode;
 
-    var sql =
-        'SELECT * FROM `user_basic_details_master` WHERE enabled="1" AND userId=?';
-    var values = [userId];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.basicDetails = err;
+    connection.query("SELECT * FROM users WHERE enabled='1' AND userCode=?", [userCode], function (err, result) {
+        if (err) response.error.message = err.message;
         else {
             console.log("Number of records fetched: " + result.length);
 
-            response.basicDetails = result;
+            if (result.length > 0) {
+                let userData = result[0];
+
+                response.id = userData.id;
+                response.userCode = userData.userCode;
+                response.firstName = userData.firstName;
+                response.lastName = userData.lastName;
+
+                getProfileData(req, res, response);
+            }
+
         }
     });
 
-    var sql =
-        'SELECT * FROM user_additional_details_master `users` WHERE enabled="1" AND userId=?';
-    var values = [userId];
 
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.additionalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.length);
-
-            response.additionalDetails = result;
-        }
-    });
-
-    var sql =
-        'SELECT * FROM user_address_details_master `users` WHERE enabled="1" AND userId=?';
-    var values = [userId];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.additionalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.length);
-
-            response.additionalDetails = result;
-        }
-    });
-
-    var sql =
-        'SELECT * FROM user_educational_details_master `users` WHERE enabled="1" AND userId=?';
-    var values = [userId];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.additionalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.length);
-
-            response.additionalDetails = result;
-        }
-    });
-
-    var sql =
-        'SELECT * FROM user_kundali_details_master `users` WHERE enabled="1" AND userId=?';
-    var values = [userId];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.additionalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.length);
-
-            response.additionalDetails = result;
-        }
-    });
-
-    var sql =
-        'SELECT * FROM user_medical_details_master `users` WHERE enabled="1" AND userId=?';
-    var values = [userId];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.additionalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.length);
-
-            response.additionalDetails = result;
-        }
-    });
-
-    var sql =
-        'SELECT * FROM user_personal_details_master `users` WHERE enabled="1" AND userId=?';
-    var values = [userId];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.additionalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.length);
-
-            response.additionalDetails = result;
-        }
-    });
-
-    var sql =
-        'SELECT * FROM user_personal_document_master `users` WHERE enabled="1" AND userId=?';
-    var values = [userId];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.additionalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.length);
-
-            response.additionalDetails = result;
-        }
-    });
-
-    var sql =
-        'SELECT * FROM user_professional_details_master `users` WHERE enabled="1" AND userId=?';
-    var values = [userId];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.additionalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.length);
-
-            response.additionalDetails = result;
-        }
-        return res.status(200).json({
-            success: true,
-            data: response,
-        });
-    });
 });
 
 router.post("/shortlisted", function (req, res, next) {
@@ -825,7 +731,7 @@ router.post("/shortlisted", function (req, res, next) {
 });
 
 router.get("/shortlisted", function (req, res, next) {
-    let user = req.query.id;
+    let user = Number(req.query.id);
 
     connection.query(
         'SELECT `userId` FROM `user_shortlisted_details_master` WHERE enabled="1" AND `userId`=?',
@@ -1017,6 +923,7 @@ router.get("/interest", function (req, res, next) {
 });
 
 router.get("/matches", function (req, res, next) {
+    console.log("Finding matches");
     let id = req.query.id;
 
     // Query for interest request sent
@@ -1744,6 +1651,141 @@ async function executeQueries(req, res) {
             );
         }));
     }
+
+    try {
+        await Promise.all(promises);
+        res.status(200).json({
+            success: true,
+            data: responseData,
+        });
+    } catch (err) {
+        res.status(400).json({
+            success: false,
+            status: err.message,
+        });
+    }
+}
+
+async function getProfileData(req, res, responseData, userId) {
+    const promises = [];
+
+    promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM `user_basic_details_master` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
+            if (err) response.error.basicDetails = err.message;
+            else if (result.length > 0) {
+                console.log("Number of records fetched from basic: " + result.length);
+
+                response.basicDetails = result;
+            }
+
+            resolve();
+        });
+    }));
+
+
+    promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM user_additional_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
+            if (err) response.error.additionalDetails = err.message;
+            else {
+                console.log("Number of records from additional: " + result.length);
+
+                response.additionalDetails = result;
+            }
+
+            resolve();
+        });
+    }));
+
+    promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM user_address_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
+            if (err) response.error.addressDetails = err.message;
+            else {
+                console.log("Number of records from address: " + result.length);
+
+                response.addressDetails = result;
+            }
+
+            resolve();
+        });
+    }));
+
+    promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM user_educational_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
+            if (err) response.error.educationalDetails = err.message;
+            else {
+                console.log("Number of records from educational: " + result.length);
+
+                response.educationalDetails = result;
+            }
+
+            resolve();
+        });
+    }));
+
+    promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM user_kundali_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
+            if (err) response.error.kundaliDetails = err.message;
+            else {
+                console.log("Number of records from kundali: " + result.length);
+
+                response.kundaliDetails = result;
+            }
+
+            resolve();
+        });
+    }));
+
+    promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM user_medical_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
+            if (err) response.error.medicalDetails = err.message;
+            else {
+                console.log("Number of records from medical: " + result.length);
+
+                response.medicalDetails = result;
+            }
+
+            resolve();
+        });
+    }));
+
+    promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM user_personal_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
+            if (err) response.error.personalDetails = err;
+            else {
+                console.log("Number of records personal: " + result.length);
+
+                response.personalDetails = result;
+            }
+
+            resolve();
+        });
+    }));
+
+    promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM user_personal_document_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
+            if (err) response.error.personalDocument = err;
+            else {
+                console.log("Number of records from personal documents: " + result.length);
+
+                response.personalDocument = result;
+            }
+
+            resolve();
+        });
+    }));
+
+    promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM user_professional_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
+            if (err) response.error.professionalDetails = err;
+            else {
+                console.log("Number of records updated: " + result.length);
+
+                response.professionalDetails = result;
+            }
+
+            resolve();
+        });
+    }));
 
     try {
         await Promise.all(promises);
