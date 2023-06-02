@@ -33,7 +33,7 @@ var response = {
 router.post("/", function (req, res, next) {
     var user = req.body;
     var basicDetails = user.basicDetails;
-    var sql = `INSERT INTO user_basic_details_master (userId, height, weight, bodyTone, placeOfBirth, timeOfBirth, dateOfBirth, createdBy, updatedBy) [userId] (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    var sql = `INSERT INTO user_basic_details_master (userId, height, weight, bodyTone, placeOfBirth, timeOfBirth, dateOfBirth, createdBy, updatedBy) values (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     var values = [
         basicDetails.userId,
         basicDetails.height,
@@ -56,13 +56,14 @@ router.post("/", function (req, res, next) {
         }
 
         var additionalDetails = user.additionalDetails;
-        sql = `INSERT INTO user_additional_details_master (userId, hobbies, foodType, houseType, languages, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        sql = `INSERT INTO user_additional_details_master (userId, hobbies, foodType, houseType, languages,preferences, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
         values = [
             additionalDetails.userId,
             additionalDetails.hobbies,
             additionalDetails.foodType,
             additionalDetails.houseType,
             additionalDetails.languages,
+            additionalDetails.preferences,
             additionalDetails.userId,
             additionalDetails.userId,
         ];
@@ -459,13 +460,14 @@ router.put("/", function (req, res, next) {
 
     var additionalDetails = user.additionalDetails;
     var sql =
-        "UPDATE `user_additional_details_master` SET  userId=?, hobbies=?, foodType=?, houseType=?, languages=?, updatedBy=? WHERE userid=?";
+        "UPDATE `user_additional_details_master` SET  userId=?, hobbies=?, foodType=?, houseType=?, languages=?, preferences=?, updatedBy=? WHERE userid=?";
     var values = [
         additionalDetails.userId,
         additionalDetails.hobbies,
         additionalDetails.foodType,
         additionalDetails.houseType,
         additionalDetails.languages,
+        additionalDetails.preferences,
         additionalDetails.userId,
         additionalDetails.userId,
     ];
