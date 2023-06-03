@@ -111,19 +111,19 @@ router.get('/delete', function (req, res, next) {
 
   // simple query
   connection.query(
-      'UPDATE `jobs` SET enabled="0" WHERE id=' + id,
-      function (err, results, fields) {
-          console.log(results);
+    'UPDATE `jobs` SET enabled="0" WHERE id=' + id,
+    function (err, results, fields) {
+      console.log(results);
 
-          if (results.affectedRows == 1) {
-              res
-                  .status(200)
-                  .json({
-                      success: true,
-                      data: "Deleted Successfully",
-                  });
-          }
-      });
+      if (results.affectedRows == 1) {
+        res
+          .status(200)
+          .json({
+            success: true,
+            data: "Deleted Successfully",
+          });
+      }
+    });
 });
 
 router.post('/addUser', function (req, res, next) {
@@ -133,21 +133,21 @@ router.post('/addUser', function (req, res, next) {
   var values = [user.userCode, user.firstName, user.lastName, user.username, user.password, user.email, user.category, user.createdBy, user.updatedBy];
 
   connection.query(sql, values, function (err, result) {
-      if (err) {
-          return res
-              .status(200)
-              .json({
-                  success: false,
-                  error: "Something went wrong: " + err,
-              });
-      };
-      console.log("Number of records inserted: " + result.affectedRows);
+    if (err) {
       return res
-          .status(200)
-          .json({
-              success: true,
-              data: result
-          });
+        .status(200)
+        .json({
+          success: false,
+          error: "Something went wrong: " + err,
+        });
+    };
+    console.log("Number of records inserted: " + result.affectedRows);
+    return res
+      .status(200)
+      .json({
+        success: true,
+        data: result
+      });
 
   });
 
@@ -160,22 +160,74 @@ router.post('/block', function (req, res, next) {
   var values = [user.userId, user.blockUserId, user.userId, user.userId];
 
   connection.query(sql, values, function (err, result) {
-      if (err) {
-          return res
-              .status(200)
-              .json({
-                  success: false,
-                  error: "Something went wrong: " + err,
-              });
-      };
-      console.log("Number of records inserted: " + result.affectedRows);
+    if (err) {
       return res
+        .status(200)
+        .json({
+          success: false,
+          error: "Something went wrong: " + err,
+        });
+    };
+    console.log("Number of records inserted: " + result.affectedRows);
+    return res
+      .status(200)
+      .json({
+        success: true,
+        data: result
+      });
+
+  });
+
+});
+
+router.post('/resetPassword', function (req, res, next) {
+
+  const user = req.body;
+
+  var sql = 'SELECT * From users WHERE email=?';
+  var values = [user.email];
+
+  connection.query(sql, values, function (err, result) {
+    if (err) {
+      return res
+        .status(200)
+        .json({
+          success: false,
+          error: "Something went wrong: " + err,
+        });
+    };
+    console.log("Number of records selected: " + result.length);
+    if (result.length > 0) {
+      var sql = 'UPDATE `users` SET  password=? WHERE email=?';
+      var values = [user.password, user.email];
+  
+      connection.query(sql, values, function (err, result) {
+        if (err) {
+          return res
+            .status(200)
+            .json({
+              success: false,
+              error: "Something went wrong: " + err,
+            });
+        };
+        console.log("Number of records inserted: " + result.affectedRows);
+  
+        res
           .status(200)
           .json({
-              success: true,
-              data: result
+            success: true,
+            data: result,
           });
-
+      });
+    }
+    else{
+      return res
+            .status(200)
+            .json({
+              success: true,
+              message: "Not found an aaccount with email "+ user.email
+            });
+    }
   });
 
 });
