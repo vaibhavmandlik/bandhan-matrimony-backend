@@ -701,7 +701,6 @@ router.get("/", function (req, res, next) {
                 response.id = userData.id;
                 response.userCode = userData.userCode;
                 response.firstName = userData.firstName;
-                response.lastName = userData.lastName;
 
                 getProfileData(req, res, response);
             }
