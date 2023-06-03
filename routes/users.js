@@ -184,7 +184,7 @@ router.post('/resetPassword', function (req, res, next) {
 
   const user = req.body;
 
-  var sql = 'SELECT * From users WHERE email=?';
+  var sql = 'SELECT * From users WHERE email=? AND enabled="1"';
   var values = [user.email];
 
   connection.query(sql, values, function (err, result) {
