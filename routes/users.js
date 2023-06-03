@@ -153,4 +153,31 @@ router.post('/addUser', function (req, res, next) {
 
 });
 
+router.post('/block', function (req, res, next) {
+
+  var user = req.body;
+  var sql = `INSERT INTO user_block_details_master (userId, blockUserId , createdBy, updatedBy) VALUES (?, ?, ?, ?)`;
+  var values = [user.userId, user.blockUserId, user.userId, user.userId];
+
+  connection.query(sql, values, function (err, result) {
+      if (err) {
+          return res
+              .status(200)
+              .json({
+                  success: false,
+                  error: "Something went wrong: " + err,
+              });
+      };
+      console.log("Number of records inserted: " + result.affectedRows);
+      return res
+          .status(200)
+          .json({
+              success: true,
+              data: result
+          });
+
+  });
+
+});
+
 module.exports = router;
