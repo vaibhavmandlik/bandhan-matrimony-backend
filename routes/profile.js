@@ -871,7 +871,7 @@ router.get("/interest", function (req, res, next) {
 
     // Query for interest request received
     connection.query(
-        'SELECT `userId`, `isAccepted` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?',
+        'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?',
         [user],
         function (err, result, fields) {
             if (err)
@@ -899,6 +899,7 @@ router.get("/interest", function (req, res, next) {
                             let interestRequest = result.filter((a) => a.userId == m.id);
 
                             m.isAccepted = interestRequest[0].isAccepted;
+                            m.interestId = interestRequest[0].id;
 
                             return m;
                         });

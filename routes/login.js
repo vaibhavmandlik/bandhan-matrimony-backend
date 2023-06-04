@@ -35,13 +35,13 @@ router.post('/', function (req, res, next) {
                 userToken.category = element.category;
                 userToken.email = element.email;
                 userToken.name = element.name;
-                userToken.refferCode = element.refferCode;
+                userToken.referCode = element.refferCode;
 
                 let token;
                 try {
                     //Creating jwt token
                     token = jwt.sign(
-                        { userId: element.id, userData: userToken },
+                        userToken,
                         "venture",
                         { expiresIn: "1h" }
                     );
@@ -51,7 +51,7 @@ router.post('/', function (req, res, next) {
                     return next(error);
                 }
 
-                res
+                return res
                     .status(200)
                     .json({
                         success: true,
