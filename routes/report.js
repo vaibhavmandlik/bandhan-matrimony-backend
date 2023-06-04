@@ -7,8 +7,8 @@ var connection = require('./connection')
 
 router.post('/', function (req, res, next) {
     const user = req.body;
-    var sql = `INSERT INTO user_report_master (userId, reportMessage, createdBy) VALUES (?, ?, ?)`;
-    var values = [user.userId, user.reportMessage, user.userId];
+    var sql = `INSERT INTO user_report_master (userId, reportType, reportedTo, reportMessage, createdBy) VALUES (?, ?, ?, ?, ?)`;
+    var values = [user.userId, user.reportType, user.reportedTo, user.reportMessage, user.userId];
 
     connection.query(sql, values, function (err, result) {
         if (err) return res.status(400).json({

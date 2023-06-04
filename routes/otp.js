@@ -1,43 +1,103 @@
 const express = require('express');
 const axios = require("axios");
-
+const nodemailer = require("nodemailer");
 var router = express.Router();
+var common = require('./common');
+var connection = require('./connection')
 
-router.post('/send-sms', async (req, res) => {
-    const apiKey = '5vxtnotioyhppea29klayz6uctzztzls';
-    const apiBaseUrl = 'http://api.gupshup.io/sms/v1/message/:8374a1c6-7268-49d9-bfd1-3a1a9bbd40ef';
-  
-    try {
-      // Get the necessary information from the request body
-    //   const { phone, message } = req.body;
-  
-      // Create the payload to send to Gupshup
-      const payload = {
-        channel: 'sms',
-        source: '7758077101',
-        destination: phone,
-        'message[message]': message
-      };
-  
-      // Make the POST request to Gupshup SMS API
-      const response = await axios.post(apiBaseUrl, payload, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'apikey': '5vxtnotioyhppea29klayz6uctzztzls'
+
+router.post('/', async (req, res) => {
+  var email = req.body.email;
+  let code = common.userCodeGenerator();
+
+  const transporter = nodemailer.createTransport({
+    port: 465,               // true for 465, false for other ports
+    host: "smtp.gmail.com",
+    auth: {
+      user: 'vaibhav.mandlik2@gmail.com',
+      pass: 'wwixxvvjwhanveud',
+    },
+    secure: true,
+  });
+
+  const mailData = {
+    from: 'vaibhav.mandlik2@gmail.com',  // sender address
+    to: email,   // list of receivers
+    subject: 'OTP for two-fact authentication',
+    html: '<b>OTP for Bandhan: </b> ' + code
+  };
+
+  transporter.sendMail(mailData, function (err, info) {
+    if (err) {
+      console.log(err)
+      res
+        .status(400)
+        .json({
+          success: false,
+          data: {
+            error: err
+          },
+        });
+    }
+    else {
+      console.log(info);
+
+      connection.query("INSERT INTO `otp_master` (otp, type, validUpto, createdBy) VALUES (?, ?, ?, ?)", [code, '0', new Date(new Date().getTime() + 5 * 60000), email], function (err, factResult) {
+        if (err) {
+          return res
+            .status(200)
+            .json({
+              success: false,
+              error: "Something went wrong: " + err,
+            });
         }
+        console.log("Inserted records in OTP master: " + factResult.affectedRows);
+
+        return res
+          .status(200)
+          .json({
+            success: true,
+          });
       });
-  
-      // Handle the response from Gupshup
-      if (response.data && response.data.status === 'success') {
-        // SMS sent successfully
-        res.json({ success: true, message: 'SMS sent successfully' });
-      } else {
-        // SMS sending failed
-        res.status(500).json({ success: false, message: 'Failed to send SMS' });
-      }
-    } catch (error) {
-      // Handle any errors that occurred during the request
-      res.status(500).json({ success: false, message: 'Failed to send SMS' });
     }
   });
+
+});
+
+router.post('/authenticate', async (req, res) => {
+  user = req.body;
+  var sql = "SELECT * FROM otp_master WHERE otp=? AND createdBy=? AND enabled='1'";
+  var values = [user.otp, user.createdBy];
+
+  connection.query(sql, values, function (err, result) {
+    if (err) {
+      console.log(err)
+      res
+        .status(400)
+        .json({
+          success: false,
+          data: {
+            error: err
+          },
+        });
+    }
+    else if (result[0].validUpto > new Date()) {
+      return res.status(200).json({
+        success: true,
+
+      });
+    }
+    else {
+      var id =result[0].id;
+      var sql = 'UPDATE `otp_master` SET  enabled="0"  WHERE id=?';;
+      var values = [id];
+      connection.query(sql, values);
+      
+      return res.status(200).json({
+        success: true,
+        message: "OTP Expired!"
+      });
+    }
+  });
+});
 module.exports = router;

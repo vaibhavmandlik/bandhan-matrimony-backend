@@ -160,4 +160,83 @@ router.post('/addUser', function (req, res, next) {
 
 });
 
+router.post('/block', function (req, res, next) {
+
+  var user = req.body;
+  var sql = `INSERT INTO user_block_details_master (userId, blockUserId , createdBy, updatedBy) VALUES (?, ?, ?, ?)`;
+  var values = [user.userId, user.blockUserId, user.userId, user.userId];
+
+  connection.query(sql, values, function (err, result) {
+    if (err) {
+      return res
+        .status(200)
+        .json({
+          success: false,
+          error: "Something went wrong: " + err,
+        });
+    };
+    console.log("Number of records inserted: " + result.affectedRows);
+    return res
+      .status(200)
+      .json({
+        success: true,
+        data: result
+      });
+
+  });
+
+});
+
+router.post('/resetPassword', function (req, res, next) {
+
+  const user = req.body;
+
+  var sql = 'SELECT * From users WHERE email=? AND enabled="1"';
+  var values = [user.email];
+
+  connection.query(sql, values, function (err, result) {
+    if (err) {
+      return res
+        .status(200)
+        .json({
+          success: false,
+          error: "Something went wrong: " + err,
+        });
+    };
+    console.log("Number of records selected: " + result.length);
+    if (result.length > 0) {
+      var sql = 'UPDATE `users` SET  password=? WHERE email=?';
+      var values = [user.password, user.email];
+  
+      connection.query(sql, values, function (err, result) {
+        if (err) {
+          return res
+            .status(200)
+            .json({
+              success: false,
+              error: "Something went wrong: " + err,
+            });
+        };
+        console.log("Number of records inserted: " + result.affectedRows);
+  
+        res
+          .status(200)
+          .json({
+            success: true,
+            data: result,
+          });
+      });
+    }
+    else{
+      return res
+            .status(200)
+            .json({
+              success: true,
+              message: "Not found an aaccount with email "+ user.email
+            });
+    }
+  });
+
+});
+
 module.exports = router;

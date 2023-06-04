@@ -33,7 +33,7 @@ var response = {
 router.post("/", function (req, res, next) {
     var user = req.body;
     var basicDetails = user.basicDetails;
-    var sql = `INSERT INTO user_basic_details_master (userId, height, weight, bodyTone, placeOfBirth, timeOfBirth, dateOfBirth, createdBy, updatedBy) [userId] (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    var sql = `INSERT INTO user_basic_details_master (userId, height, weight, bodyTone, placeOfBirth, timeOfBirth, dateOfBirth, createdBy, updatedBy) values (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     var values = [
         basicDetails.userId,
         basicDetails.height,
@@ -56,13 +56,14 @@ router.post("/", function (req, res, next) {
         }
 
         var additionalDetails = user.additionalDetails;
-        sql = `INSERT INTO user_additional_details_master (userId, hobbies, foodType, houseType, languages, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        sql = `INSERT INTO user_additional_details_master (userId, hobbies, foodType, houseType, languages,preferences, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
         values = [
             additionalDetails.userId,
             additionalDetails.hobbies,
             additionalDetails.foodType,
             additionalDetails.houseType,
             additionalDetails.languages,
+            additionalDetails.preferences,
             additionalDetails.userId,
             additionalDetails.userId,
         ];
@@ -459,13 +460,14 @@ router.put("/", function (req, res, next) {
 
     var additionalDetails = user.additionalDetails;
     var sql =
-        "UPDATE `user_additional_details_master` SET  userId=?, hobbies=?, foodType=?, houseType=?, languages=?, updatedBy=? WHERE userid=?";
+        "UPDATE `user_additional_details_master` SET  userId=?, hobbies=?, foodType=?, houseType=?, languages=?, preferences=?, updatedBy=? WHERE userid=?";
     var values = [
         additionalDetails.userId,
         additionalDetails.hobbies,
         additionalDetails.foodType,
         additionalDetails.houseType,
         additionalDetails.languages,
+        additionalDetails.preferences,
         additionalDetails.userId,
         additionalDetails.userId,
     ];
@@ -869,7 +871,7 @@ router.get("/interest", function (req, res, next) {
 
     // Query for interest request received
     connection.query(
-        'SELECT `userId`, `isAccepted` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?',
+        'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?',
         [user],
         function (err, result, fields) {
             if (err)
@@ -897,6 +899,7 @@ router.get("/interest", function (req, res, next) {
                             let interestRequest = result.filter((a) => a.userId == m.id);
 
                             m.isAccepted = interestRequest[0].isAccepted;
+                            m.interestId = interestRequest[0].id;
 
                             return m;
                         });
@@ -952,6 +955,26 @@ router.put("/interest", function (req, res, next) {
 
             });
         }
+    });
+});
+
+router.post("/interest", function (req, res, next) {
+    const user = req.body;
+    var sql = `INSERT INTO user_interest_details_master (userId, interestedInId) VALUES (?, ?)`;
+    var values = [user.userId, user.interestedInId];
+
+    connection.query(sql, values, function (err, result) {
+        if (err) response.error = err;
+        else {
+            console.log("Number of records Inserted: " + result.affectedRows);
+
+            user.id = result.insertId;
+            response.user = user;
+        }
+        return res.status(200).json({
+            success: true,
+            data: response,
+        });
     });
 });
 

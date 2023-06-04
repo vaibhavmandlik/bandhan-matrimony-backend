@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 var router = express.Router();
 
 var connection = require('./connection')
+var common = require('./common')
 
 router.post('/', function (req, res, next) {
 
@@ -87,7 +88,7 @@ router.post('/', function (req, res, next) {
         isUserCodeVerified = false;
 
         while (!isUserCodeVerified) {
-          userCode = userCodeGenerator();
+          userCode = common.userCodeGenerator();
           isUserCodeVerified = await verifyUserCode(userCode);
         }
 
@@ -149,21 +150,6 @@ router.post('/', function (req, res, next) {
 
     });
 });
-
-function userCodeGenerator() {
-  var chars = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-    serialLength = 5,
-    randomSerial = "",
-    i,
-    randomNumber;
-
-  for (i = 0; i < serialLength; i = i + 1) {
-    randomNumber = Math.floor(Math.random() * chars.length);
-    randomSerial += chars.substring(randomNumber, randomNumber + 1);
-  }
-
-  return randomSerial;
-}
 
 function verifyUserCode(userCode) {
   return new Promise((resolve, reject) => {
