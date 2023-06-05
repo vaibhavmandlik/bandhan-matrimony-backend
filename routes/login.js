@@ -34,7 +34,7 @@ router.post('/', function (req, res, next) {
                 userToken.id = element.id;
                 userToken.category = element.category;
                 userToken.email = element.email;
-                userToken.name = element.name;
+                userToken.name = element.firstName;
                 userToken.referCode = element.refferCode;
 
                 let token;

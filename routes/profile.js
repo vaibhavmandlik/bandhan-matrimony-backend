@@ -827,7 +827,7 @@ router.get("/interest", function (req, res, next) {
 
     // Query for interest request sent
     connection.query(
-        'SELECT `interestedInId`, `isAccepted` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?',
+        'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?',
         [user],
         function (err, result, fields) {
             if (err)
@@ -858,6 +858,7 @@ router.get("/interest", function (req, res, next) {
                             );
 
                             m.isAccepted = interestRequest[0].isAccepted;
+                            m.interestId = interestRequest[0].id;
 
                             return m;
                         });
@@ -938,11 +939,44 @@ router.put("/interest", function (req, res, next) {
                 success: false,
                 message: "Id Not Found"
             });
-            
+
         }
         else if (result.length > 0) {
             var sql = "UPDATE `user_interest_details_master` SET  isAccepted=? WHERE id=?";
             var values = [action, id];
+
+            connection.query(sql, values, function (err, result) {
+                if (err) response.error = err;
+                else {
+                    console.log("Number of records updated: " + result.affectedRows);
+                    return res.status(200).json({
+                        success: true,
+                    });
+                }
+
+            });
+        }
+    });
+});
+
+router.delete("/interest", function (req, res, next) {
+    var id = req.query.interestId;
+    var sql = "SELECT `id` FROM `user_interest_details_master` WHERE `id`=?";
+    var values = [id];
+
+    connection.query(sql, values, function (err, result) {
+        if (err) response.error = err;
+        else if (result.length == 0) {
+            console.log("Id not found");
+            return res.status(400).json({
+                success: false,
+                message: "Id Not Found"
+            });
+
+        }
+        else if (result.length > 0) {
+            var sql = "UPDATE `user_interest_details_master` SET  enabled='0' WHERE id=?";
+            var values = [id];
 
             connection.query(sql, values, function (err, result) {
                 if (err) response.error = err;
@@ -1834,7 +1868,7 @@ async function getProfileData(req, res, responseData, userId) {
         connection.query("SELECT * FROM user_professional_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
             if (err) response.error.professionalDetails = err;
             else {
-                console.log("Number of records updated: " + result.length);
+                console.log("Number of records from professional: " + result.length);
 
                 response.professionalDetails = result;
             }
