@@ -975,7 +975,7 @@ router.delete("/interest", function (req, res, next) {
 
         }
         else if (result.length > 0) {
-            var sql = "UPDATE `user_interest_details_master` SET  enabled='0' WHERE id=?";
+            var sql = "UPDATE `user_interest_details_master` SET enabled='0' WHERE id=?";
             var values = [id];
 
             connection.query(sql, values, function (err, result) {
@@ -994,22 +994,27 @@ router.delete("/interest", function (req, res, next) {
 
 router.post("/interest", function (req, res, next) {
     const user = req.body;
-    var sql = `INSERT INTO user_interest_details_master (userId, interestedInId) VALUES (?, ?)`;
-    var values = [user.userId, user.interestedInId];
 
-    connection.query(sql, values, function (err, result) {
+    connection.query("SELECT id FROM users WHERE userCode=?", [user.interestedIn], function (err, result) {
         if (err) response.error = err;
-        else {
-            console.log("Number of records Inserted: " + result.affectedRows);
 
-            user.id = result.insertId;
-            response.user = user;
-        }
-        return res.status(200).json({
-            success: true,
-            data: response,
+        var sql = `INSERT INTO user_interest_details_master (userId, interestedInId, createdBy, updatedBy, updatedOn) VALUES (?, ?, ?, ?, ?)`;
+        var values = [user.userId, result[0].id, user.userId, user.userId, new Date()];
+        connection.query(sql, values, function (err, result) {
+            if (err) response.error = err;
+            else {
+                console.log("Number of records Inserted: " + result.affectedRows);
+
+                user.id = result.insertId;
+                response.user = user;
+            }
+            return res.status(200).json({
+                success: true,
+                data: response,
+            });
         });
     });
+
 });
 
 router.get("/matches", function (req, res, next) {
