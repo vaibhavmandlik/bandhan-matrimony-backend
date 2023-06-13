@@ -701,8 +701,9 @@ router.get("/", function (req, res, next) {
                 response.id = userData.id;
                 response.userCode = userData.userCode;
                 response.firstName = userData.firstName;
+                response.lastName = userData.lastName;
 
-                getProfileData(req, res, response);
+                getProfileData(req, res, response, userId);
             }
 
         }
@@ -1766,11 +1767,11 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM `user_basic_details_master` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) response.error.basicDetails = err.message;
+            if (err) responseData.error.basicDetails = err.message;
             else if (result.length > 0) {
                 console.log("Number of records fetched from basic: " + result.length);
 
-                response.basicDetails = result;
+                responseData.basicDetails = result[0];
             }
 
             resolve();
@@ -1780,11 +1781,11 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_additional_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) response.error.additionalDetails = err.message;
+            if (err) responseData.error.additionalDetails = err.message;
             else {
                 console.log("Number of records from additional: " + result.length);
 
-                response.additionalDetails = result;
+                responseData.additionalDetails = result[0];
             }
 
             resolve();
@@ -1793,11 +1794,11 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_address_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) response.error.addressDetails = err.message;
+            if (err) responseData.error.addressDetails = err.message;
             else {
                 console.log("Number of records from address: " + result.length);
 
-                response.addressDetails = result;
+                responseData.addressDetails = result[0];
             }
 
             resolve();
@@ -1806,11 +1807,11 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_educational_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) response.error.educationalDetails = err.message;
+            if (err) responseData.error.educationalDetails = err.message;
             else {
                 console.log("Number of records from educational: " + result.length);
 
-                response.educationalDetails = result;
+                responseData.educationalDetails = result[0];
             }
 
             resolve();
@@ -1819,11 +1820,11 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_kundali_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) response.error.kundaliDetails = err.message;
+            if (err) responseData.error.kundaliDetails = err.message;
             else {
                 console.log("Number of records from kundali: " + result.length);
 
-                response.kundaliDetails = result;
+                responseData.kundaliDetails = result[0];
             }
 
             resolve();
@@ -1832,11 +1833,11 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_medical_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) response.error.medicalDetails = err.message;
+            if (err) responseData.error.medicalDetails = err.message;
             else {
                 console.log("Number of records from medical: " + result.length);
 
-                response.medicalDetails = result;
+                responseData.medicalDetails = result[0];
             }
 
             resolve();
@@ -1845,11 +1846,11 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_personal_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) response.error.personalDetails = err;
+            if (err) responseData.error.personalDetails = err;
             else {
                 console.log("Number of records personal: " + result.length);
 
-                response.personalDetails = result;
+                responseData.personalDetails = result[0];
             }
 
             resolve();
@@ -1858,11 +1859,11 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_personal_document_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) response.error.personalDocument = err;
+            if (err) responseData.error.personalDocument = err;
             else {
                 console.log("Number of records from personal documents: " + result.length);
 
-                response.personalDocument = result;
+                responseData.personalDocument = result[0];
             }
 
             resolve();
@@ -1871,11 +1872,11 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_professional_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) response.error.professionalDetails = err;
+            if (err) responseData.error.professionalDetails = err;
             else {
                 console.log("Number of records from professional: " + result.length);
 
-                response.professionalDetails = result;
+                responseData.professionalDetails = result[0];
             }
 
             resolve();
