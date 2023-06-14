@@ -433,17 +433,14 @@ router.put("/", function (req, res, next) {
     var user = req.body;
     var basicDetails = user.basicDetails;
 
-    var sql =
-        "UPDATE `user_basic_details_master` SET  userId=?, height=?, weight=?, bodyTone=?, placeOfBirth=?, timeOfBirth=?, dateOfBirth=?, updatedBy=? WHERE userid=?";
+    var sql = "UPDATE `user_basic_details_master` SET  height=?, weight=?, bodyTone=?, placeOfBirth=?, timeOfBirth=?, dateOfBirth=?, updatedBy=? WHERE userid=?";
     var values = [
-        basicDetails.userId,
         basicDetails.height,
         basicDetails.weight,
         basicDetails.bodyTone,
         basicDetails.placeOfBirth,
         basicDetails.timeOfBirth,
         basicDetails.dateOfBirth,
-        basicDetails.userId,
         basicDetails.userId,
         basicDetails.userId,
     ];
@@ -460,9 +457,8 @@ router.put("/", function (req, res, next) {
 
     var additionalDetails = user.additionalDetails;
     var sql =
-        "UPDATE `user_additional_details_master` SET  userId=?, hobbies=?, foodType=?, houseType=?, languages=?, preferences=?, updatedBy=? WHERE userid=?";
+        "UPDATE `user_additional_details_master` SET hobbies=?, foodType=?, houseType=?, languages=?, preferences=?, updatedBy=? WHERE userid=?";
     var values = [
-        additionalDetails.userId,
         additionalDetails.hobbies,
         additionalDetails.foodType,
         additionalDetails.houseType,
@@ -484,9 +480,8 @@ router.put("/", function (req, res, next) {
 
     var addressDetails = user.addressDetails;
     var sql =
-        "UPDATE `user_address_details_master` SET  userId=?, addressLine1=?, addressLine2=?, landmark=?, taluka=?, city=?, state=?, pincode=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_address_details_master` SET addressLine1=?, addressLine2=?, landmark=?, taluka=?, city=?, state=?, pincode=?, updatedBy=? WHERE userId=?";
     var values = [
-        addressDetails.userId,
         addressDetails.addressLine1,
         addressDetails.addressLine2,
         addressDetails.landmark,
@@ -510,9 +505,8 @@ router.put("/", function (req, res, next) {
 
     var educationalDetails = user.educationalDetails;
     var sql =
-        "UPDATE `user_educational_details_master` SET  userId=?, educationType=?, qualification=?, stream=?, qualifiedFrom=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_educational_details_master` SET educationType=?, qualification=?, stream=?, qualifiedFrom=?, updatedBy=? WHERE userId=?";
     var values = [
-        educationalDetails.userId,
         educationalDetails.educationType,
         educationalDetails.qualification,
         educationalDetails.stream,
@@ -533,9 +527,8 @@ router.put("/", function (req, res, next) {
 
     var kundaliDetails = user.kundaliDetails;
     var sql =
-        "UPDATE `user_kundali_details_master` SET  userId=?, moonStar=?, moonSign=?, gan=?, gotra=?, naadi=?, caste=?, subCaste=?, manglik=?, bloodGroup=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_kundali_details_master` SET moonStar=?, moonSign=?, gan=?, gotra=?, naadi=?, caste=?, subCaste=?, manglik=?, bloodGroup=?, updatedBy=? WHERE userId=?";
     var values = [
-        kundaliDetails.userId,
         kundaliDetails.moonStar,
         kundaliDetails.moonSign,
         kundaliDetails.gan,
@@ -561,9 +554,8 @@ router.put("/", function (req, res, next) {
 
     var medicalDetails = user.medicalDetails;
     var sql =
-        "UPDATE `user_medical_details_master` SET  userId=?, isSpectacles=?, alcoholic=?, smoking=?, medicalHistory=?, isInsured=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_medical_details_master` SET isSpectacles=?, alcoholic=?, smoking=?, medicalHistory=?, isInsured=?, updatedBy=? WHERE userId=?";
     var values = [
-        medicalDetails.userId,
         medicalDetails.isSpectacles,
         medicalDetails.alcoholic,
         medicalDetails.smoking,
@@ -585,9 +577,8 @@ router.put("/", function (req, res, next) {
 
     var personalDetails = user.personalDetails;
     var sql =
-        "UPDATE `user_personal_details_master` SET  userId=?, gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, updatedBy=? WHERE userId=?";
     var values = [
-        personalDetails.userId,
         personalDetails.gender,
         personalDetails.primaryPhoneNumber,
         personalDetails.secondaryPhoneNumber,
@@ -610,9 +601,8 @@ router.put("/", function (req, res, next) {
 
     var personalDocument = user.personalDocument;
     var sql =
-        "UPDATE `user_personal_document_master` SET  userId=?, aadharId=?, voterId=?, drivingId=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_personal_document_master` SET  aadharId=?, voterId=?, drivingId=?, updatedBy=? WHERE userId=?";
     var values = [
-        personalDocument.userId,
         personalDocument.aadharId,
         personalDocument.voterId,
         personalDocument.drivingId,
@@ -632,9 +622,8 @@ router.put("/", function (req, res, next) {
 
     var professionalDetails = user.professionalDetails;
     var sql =
-        "UPDATE `user_professional_details_master` SET  userId=?, incomeType=?, designation=?, jobLocation=?, incomeRange=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_professional_details_master` SET incomeType=?, designation=?, jobLocation=?, incomeRange=?, updatedBy=? WHERE userId=?";
     var values = [
-        professionalDetails.userId,
         professionalDetails.incomeType,
         professionalDetails.designation,
         professionalDetails.jobLocation,
