@@ -480,13 +480,14 @@ router.put("/", function (req, res, next) {
 
     var addressDetails = user.addressDetails;
     var sql =
-        "UPDATE `user_address_details_master` SET addressLine1=?, addressLine2=?, landmark=?, taluka=?, city=?, state=?, pincode=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_address_details_master` SET addressLine1=?, addressLine2=?, landmark=?, taluka=?, city=?, currentCity=?, state=?, pincode=?, updatedBy=? WHERE userId=?";
     var values = [
         addressDetails.addressLine1,
         addressDetails.addressLine2,
         addressDetails.landmark,
         addressDetails.taluka,
         addressDetails.city,
+        addressDetails.currentCity,
         addressDetails.state,
         addressDetails.pincode,
         addressDetails.userId,
@@ -577,7 +578,7 @@ router.put("/", function (req, res, next) {
 
     var personalDetails = user.personalDetails;
     var sql =
-        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, updatedBy=? WHERE userId=?";
     var values = [
         personalDetails.gender,
         personalDetails.primaryPhoneNumber,
@@ -585,6 +586,8 @@ router.put("/", function (req, res, next) {
         personalDetails.managedBy,
         personalDetails.bio,
         personalDetails.marriageType,
+        personalDetails.motherTongue,
+        personalDetails.familyType,
         personalDetails.userId,
         personalDetails.userId,
     ];
