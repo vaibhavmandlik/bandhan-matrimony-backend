@@ -578,7 +578,7 @@ router.put("/", function (req, res, next) {
 
     var personalDetails = user.personalDetails;
     var sql =
-        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
     var values = [
         personalDetails.gender,
         personalDetails.primaryPhoneNumber,
@@ -588,6 +588,7 @@ router.put("/", function (req, res, next) {
         personalDetails.marriageType,
         personalDetails.motherTongue,
         personalDetails.familyType,
+        personalDetails.familyBio,
         personalDetails.userId,
         personalDetails.userId,
     ];
