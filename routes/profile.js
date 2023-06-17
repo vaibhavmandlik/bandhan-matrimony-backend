@@ -740,7 +740,7 @@ router.get("/shortlisted", function (req, res, next) {
                     data: [],
                 });
 
-            let shortlisted = [];
+            let shortlisted = [];   
             results.forEach((element) => {
                 shortlisted.push(element.userId);
             });

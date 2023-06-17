@@ -1,5 +1,7 @@
 const express = require('express');
 const jwt = require("jsonwebtoken");
+var common = require('./common');
+
 var router = express.Router();
 
 var connection = require('./connection')
@@ -10,7 +12,7 @@ router.post('/', function (req, res, next) {
   const user = req.body;
 
   connection.query(
-    'SELECT * FROM `users` WHERE username=?', [user.username],
+    'SELECT * FROM `users` WHERE username=?', [user.email],
     function (err, results, fields) {
       if (results.length > 0)
         return res
@@ -38,7 +40,7 @@ router.post('/', function (req, res, next) {
 
         var sql = `INSERT INTO user_address_details_master (userId, city) VALUES (?, ?)`;
         var values = [result.insertId, user.addressDetails.city];
-  
+
         connection.query(sql, values, async function (err, result) {
           if (err) {
             return res
@@ -48,13 +50,13 @@ router.post('/', function (req, res, next) {
                 error: "Something went wrong: " + err,
               })
           }
-  
+
           console.log("Number of records inserted: " + result.affectedRows);
         });
 
         var sql = `INSERT INTO user_personal_details_master (userId, primaryPhoneNumber) VALUES (?, ?)`;
         var values = [result.insertId, user.personalDetails.primaryPhoneNumber];
-  
+
         connection.query(sql, values, async function (err, result) {
           if (err) {
             return res
@@ -64,13 +66,13 @@ router.post('/', function (req, res, next) {
                 error: "Something went wrong: " + err,
               })
           }
-  
+
           console.log("Number of records inserted: " + result.affectedRows);
         });
 
         var sql = `INSERT INTO user_basic_details_master (userId, dateOfBirth) VALUES (?, ?)`;
         var values = [result.insertId, user.basicDetails.dateOfBirth];
-  
+
         connection.query(sql, values, async function (err, result) {
           if (err) {
             return res
@@ -80,7 +82,7 @@ router.post('/', function (req, res, next) {
                 error: "Something went wrong: " + err,
               })
           }
-  
+
           console.log("Number of records inserted: " + result.affectedRows);
         });
 
@@ -92,7 +94,7 @@ router.post('/', function (req, res, next) {
           isUserCodeVerified = await verifyUserCode(userCode);
         }
 
-        let refferCode = userCodeGenerator();
+        let refferCode = common.userCodeGenerator();
         var sql = `UPDATE users SET userCode=?, refferCode=?, createdBy=?, updatedBy=? WHERE id=?`;
         var values = [userCode, refferCode, result.insertId, result.insertId, result.insertId];
 
@@ -108,11 +110,13 @@ router.post('/', function (req, res, next) {
 
           if (results.affectedRows > 0) {
             const userToken = {};
-            userToken.id = result.insertId;
-            userToken.username = user.email;
-            userToken.userCode = userCode;
-            userToken.email = user.email;
-            userToken.refferCode = refferCode;
+            userToken.username = element.username
+            userToken.id = element.id;
+            userToken.category = element.category;
+            userToken.email = element.email;
+            userToken.name = element.firstName;
+            userToken.referCode = element.refferCode;
+            userToken.userCode = element.userCode;
 
             let token;
 
