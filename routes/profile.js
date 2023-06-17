@@ -638,14 +638,14 @@ router.put("/", function (req, res, next) {
     connection.query(sql, values, function (err, result) {
         if (err) response.error.professionalDetails = err;
         else {
-            console.log("Number of records inserted: " + result.affectedRows);
+            console.log("Number of records updated in professional: " + result.affectedRows);
 
             professionalDetails.id = result.insertId;
             response.professionalDetails = professionalDetails;
         }
         return res.status(200).json({
             success: true,
-            data: response,
+            data: user,
         });
     });
 });
