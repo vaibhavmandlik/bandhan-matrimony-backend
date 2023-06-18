@@ -578,7 +578,7 @@ router.put("/", function (req, res, next) {
 
     var personalDetails = user.personalDetails;
     var sql =
-        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, updatedBy=? WHERE userId=?";
+        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
     var values = [
         personalDetails.gender,
         personalDetails.primaryPhoneNumber,
@@ -588,6 +588,7 @@ router.put("/", function (req, res, next) {
         personalDetails.marriageType,
         personalDetails.motherTongue,
         personalDetails.familyType,
+        personalDetails.familyBio,
         personalDetails.userId,
         personalDetails.userId,
     ];
@@ -638,14 +639,14 @@ router.put("/", function (req, res, next) {
     connection.query(sql, values, function (err, result) {
         if (err) response.error.professionalDetails = err;
         else {
-            console.log("Number of records inserted: " + result.affectedRows);
+            console.log("Number of records updated in professional: " + result.affectedRows);
 
             professionalDetails.id = result.insertId;
             response.professionalDetails = professionalDetails;
         }
         return res.status(200).json({
             success: true,
-            data: response,
+            data: user,
         });
     });
 });
