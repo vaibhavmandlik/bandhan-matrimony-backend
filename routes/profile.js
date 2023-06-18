@@ -431,224 +431,9 @@ router.put("/", function (req, res, next) {
         professionalDetails: {},
     };
     var user = req.body;
-    var basicDetails = user.basicDetails;
 
-    var sql = "UPDATE `user_basic_details_master` SET  height=?, weight=?, bodyTone=?, placeOfBirth=?, timeOfBirth=?, dateOfBirth=?, updatedBy=? WHERE userid=?";
-    var values = [
-        basicDetails.height,
-        basicDetails.weight,
-        basicDetails.bodyTone,
-        basicDetails.placeOfBirth,
-        basicDetails.timeOfBirth,
-        basicDetails.dateOfBirth,
-        basicDetails.userId,
-        basicDetails.userId,
-    ];
+    executeUpdateQueries(req, res, user);
 
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.basicDetails = err;
-        else {
-            console.log("Number of records updated: " + result.affectedRows);
-
-            basicDetails.id = result.insertId;
-            response.basicDetails = basicDetails;
-        }
-    });
-
-    var additionalDetails = user.additionalDetails;
-    var sql =
-        "UPDATE `user_additional_details_master` SET hobbies=?, foodType=?, houseType=?, languages=?, preferences=?, updatedBy=? WHERE userid=?";
-    var values = [
-        additionalDetails.hobbies,
-        additionalDetails.foodType,
-        additionalDetails.houseType,
-        additionalDetails.languages,
-        additionalDetails.preferences,
-        additionalDetails.userId,
-        additionalDetails.userId,
-    ];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.additionalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.affectedRows);
-
-            additionalDetails.id = result.insertId;
-            response.additionalDetails = additionalDetails;
-        }
-    });
-
-    var addressDetails = user.addressDetails;
-    var sql =
-        "UPDATE `user_address_details_master` SET addressLine1=?, addressLine2=?, landmark=?, taluka=?, city=?, currentCity=?, state=?, pincode=?, updatedBy=? WHERE userId=?";
-    var values = [
-        addressDetails.addressLine1,
-        addressDetails.addressLine2,
-        addressDetails.landmark,
-        addressDetails.taluka,
-        addressDetails.city,
-        addressDetails.currentCity,
-        addressDetails.state,
-        addressDetails.pincode,
-        addressDetails.userId,
-        addressDetails.userId,
-    ];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.addressDetails = err;
-        else {
-            console.log("Number of records updated: " + result.affectedRows);
-
-            addressDetails.id = result.insertId;
-            response.addressDetails = addressDetails;
-        }
-    });
-
-    var educationalDetails = user.educationalDetails;
-    var sql =
-        "UPDATE `user_educational_details_master` SET educationType=?, qualification=?, stream=?, qualifiedFrom=?, updatedBy=? WHERE userId=?";
-    var values = [
-        educationalDetails.educationType,
-        educationalDetails.qualification,
-        educationalDetails.stream,
-        educationalDetails.qualifiedFrom,
-        educationalDetails.userId,
-        educationalDetails.userId,
-    ];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.educationalDetails = err;
-        else {
-            console.log("Number of records updated: " + result.affectedRows);
-
-            educationalDetails.id = result.insertId;
-            response.educationalDetails = educationalDetails;
-        }
-    });
-
-    var kundaliDetails = user.kundaliDetails;
-    var sql =
-        "UPDATE `user_kundali_details_master` SET moonStar=?, moonSign=?, gan=?, gotra=?, naadi=?, caste=?, subCaste=?, manglik=?, bloodGroup=?, updatedBy=? WHERE userId=?";
-    var values = [
-        kundaliDetails.moonStar,
-        kundaliDetails.moonSign,
-        kundaliDetails.gan,
-        kundaliDetails.gotra,
-        kundaliDetails.naadi,
-        kundaliDetails.caste,
-        kundaliDetails.subCaste,
-        kundaliDetails.manglik,
-        kundaliDetails.bloodGroup,
-        kundaliDetails.userId,
-        kundaliDetails.userId,
-    ];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.kundaliDetails = err;
-        else {
-            console.log("Number of records inserted: " + result.affectedRows);
-
-            kundaliDetails.id = result.insertId;
-            response.kundaliDetails = kundaliDetails;
-        }
-    });
-
-    var medicalDetails = user.medicalDetails;
-    var sql =
-        "UPDATE `user_medical_details_master` SET isSpectacles=?, alcoholic=?, smoking=?, medicalHistory=?, isInsured=?, updatedBy=? WHERE userId=?";
-    var values = [
-        medicalDetails.isSpectacles,
-        medicalDetails.alcoholic,
-        medicalDetails.smoking,
-        medicalDetails.medicalHistory,
-        medicalDetails.isInsured,
-        medicalDetails.userId,
-        medicalDetails.userId,
-    ];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.medicalDetails = err;
-        else {
-            console.log("Number of records inserted: " + result.affectedRows);
-
-            medicalDetails.id = result.insertId;
-            response.medicalDetails = medicalDetails;
-        }
-    });
-
-    var personalDetails = user.personalDetails;
-    var sql =
-        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
-    var values = [
-        personalDetails.gender,
-        personalDetails.primaryPhoneNumber,
-        personalDetails.secondaryPhoneNumber,
-        personalDetails.managedBy,
-        personalDetails.bio,
-        personalDetails.marriageType,
-        personalDetails.motherTongue,
-        personalDetails.familyType,
-        personalDetails.familyBio,
-        personalDetails.userId,
-        personalDetails.userId,
-    ];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.personalDetails = err;
-        else {
-            console.log("Number of records inserted: " + result.affectedRows);
-
-            personalDetails.id = result.insertId;
-            response.personalDetails = personalDetails;
-        }
-    });
-
-    var personalDocument = user.personalDocument;
-    var sql =
-        "UPDATE `user_personal_document_master` SET  aadharId=?, voterId=?, drivingId=?, updatedBy=? WHERE userId=?";
-    var values = [
-        personalDocument.aadharId,
-        personalDocument.voterId,
-        personalDocument.drivingId,
-        personalDocument.userId,
-        personalDocument.userId,
-    ];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.personalDocument = err;
-        else {
-            console.log("Number of records inserted: " + result.affectedRows);
-
-            personalDocument.id = result.insertId;
-            response.personalDocument = personalDocument;
-        }
-    });
-
-    var professionalDetails = user.professionalDetails;
-    var sql =
-        "UPDATE `user_professional_details_master` SET incomeType=?, designation=?, jobLocation=?, incomeRange=?, updatedBy=? WHERE userId=?";
-    var values = [
-        professionalDetails.incomeType,
-        professionalDetails.designation,
-        professionalDetails.jobLocation,
-        professionalDetails.incomeRange,
-        professionalDetails.userId,
-        professionalDetails.userId,
-    ];
-
-    connection.query(sql, values, function (err, result) {
-        if (err) response.error.professionalDetails = err;
-        else {
-            console.log("Number of records updated in professional: " + result.affectedRows);
-
-            professionalDetails.id = result.insertId;
-            response.professionalDetails = professionalDetails;
-        }
-        return res.status(200).json({
-            success: true,
-            data: user,
-        });
-    });
 });
 
 router.get("/", function (req, res, next) {
@@ -697,12 +482,15 @@ router.get("/", function (req, res, next) {
                 response.lastName = userData.lastName;
 
                 getProfileData(req, res, response, userId);
+            } else {
+                res.status(200).json({
+                    success: false,
+                    status: "User data not found",
+                });
             }
 
         }
     });
-
-
 });
 
 router.post("/shortlisted", function (req, res, next) {
@@ -1155,8 +943,6 @@ router.post("/filter", function (req, res, next) {
         executeQueries(req, res);
     }
 });
-
-module.exports = router;
 
 function checkDuplicateResponse(results, responseData) {
     results.forEach((u) => {
@@ -1755,12 +1541,298 @@ async function executeQueries(req, res) {
     }
 }
 
+async function executeUpdateQueries(req, res, user) {
+    const promises = [];
+
+    if ("basicDetails" in user) {
+        var basicDetails = user.basicDetails;
+
+        var sql = "UPDATE `user_basic_details_master` SET  height=?, weight=?, bodyTone=?, placeOfBirth=?, timeOfBirth=?, dateOfBirth=?, updatedBy=? WHERE userid=?";
+        var values = [
+            basicDetails.height,
+            basicDetails.weight,
+            basicDetails.bodyTone,
+            basicDetails.placeOfBirth,
+            basicDetails.timeOfBirth,
+            basicDetails.dateOfBirth,
+            basicDetails.userId,
+            basicDetails.userId,
+        ];
+
+        promises.push(new Promise((resolve, reject) => {
+            connection.query(sql, values, function (err, result) {
+                if (err) reject(err);
+                else {
+                    console.log("Number of records updated: " + result.affectedRows);
+
+                    basicDetails.id = result.insertId;
+                    response.basicDetails = basicDetails;
+                }
+                resolve();
+            });
+        }));
+
+    }
+
+    if ("additionalDetails" in user) {
+        var additionalDetails = user.additionalDetails;
+        var sql =
+            "UPDATE `user_additional_details_master` SET hobbies=?, foodType=?, houseType=?, languages=?, preferences=?, updatedBy=? WHERE userid=?";
+        var values = [
+            additionalDetails.hobbies,
+            additionalDetails.foodType,
+            additionalDetails.houseType,
+            additionalDetails.languages,
+            additionalDetails.preferences,
+            additionalDetails.userId,
+            additionalDetails.userId,
+        ];
+
+        promises.push(new Promise((resolve, reject) => {
+            connection.query(sql, values, function (err, result) {
+                if (err) reject(err);
+                else {
+                    console.log("Number of records updated: " + result.affectedRows);
+
+                    additionalDetails.id = result.insertId;
+                    response.additionalDetails = additionalDetails;
+                }
+                resolve();
+            });
+        }));
+    }
+
+    if ("addressDetails" in user) {
+        var addressDetails = user.addressDetails;
+        var sql =
+            "UPDATE `user_address_details_master` SET addressLine1=?, addressLine2=?, landmark=?, taluka=?, city=?, currentCity=?, state=?, pincode=?, updatedBy=? WHERE userId=?";
+        var values = [
+            addressDetails.addressLine1,
+            addressDetails.addressLine2,
+            addressDetails.landmark,
+            addressDetails.taluka,
+            addressDetails.city,
+            addressDetails.currentCity,
+            addressDetails.state,
+            addressDetails.pincode,
+            addressDetails.userId,
+            addressDetails.userId,
+        ];
+
+        promises.push(new Promise((resolve, reject) => {
+            connection.query(sql, values, function (err, result) {
+                if (err) reject(err);
+                else {
+                    console.log("Number of records updated: " + result.affectedRows);
+
+                    addressDetails.id = result.insertId;
+                    response.addressDetails = addressDetails;
+                }
+                resolve();
+            });
+        }));
+    }
+
+    if ("educationalDetails" in user) {
+        var educationalDetails = user.educationalDetails;
+        var sql =
+            "UPDATE `user_educational_details_master` SET educationType=?, qualification=?, stream=?, qualifiedFrom=?, updatedBy=? WHERE userId=?";
+        var values = [
+            educationalDetails.educationType,
+            educationalDetails.qualification,
+            educationalDetails.stream,
+            educationalDetails.qualifiedFrom,
+            educationalDetails.userId,
+            educationalDetails.userId,
+        ];
+
+        promises.push(new Promise((resolve, reject) => {
+            connection.query(sql, values, function (err, result) {
+                if (err) reject(err);
+                else {
+                    console.log("Number of records updated: " + result.affectedRows);
+
+                    educationalDetails.id = result.insertId;
+                    response.educationalDetails = educationalDetails;
+                }
+                resolve();
+            });
+        }));
+    }
+
+    if ("kundaliDetails" in user) {
+        var kundaliDetails = user.kundaliDetails;
+        var sql =
+            "UPDATE `user_kundali_details_master` SET moonStar=?, moonSign=?, gan=?, gotra=?, naadi=?, caste=?, subCaste=?, manglik=?, bloodGroup=?, updatedBy=? WHERE userId=?";
+        var values = [
+            kundaliDetails.moonStar,
+            kundaliDetails.moonSign,
+            kundaliDetails.gan,
+            kundaliDetails.gotra,
+            kundaliDetails.naadi,
+            kundaliDetails.caste,
+            kundaliDetails.subCaste,
+            kundaliDetails.manglik,
+            kundaliDetails.bloodGroup,
+            kundaliDetails.userId,
+            kundaliDetails.userId,
+        ];
+
+        promises.push(new Promise((resolve, reject) => {
+            connection.query(sql, values, function (err, result) {
+                if (err) reject(err);
+                else {
+                    console.log("Number of records inserted: " + result.affectedRows);
+
+                    kundaliDetails.id = result.insertId;
+                    response.kundaliDetails = kundaliDetails;
+                }
+                resolve();
+            });
+        }));
+    }
+
+    if ("medicalDetails" in user) {
+        var medicalDetails = user.medicalDetails;
+        var sql =
+            "UPDATE `user_medical_details_master` SET isSpectacles=?, alcoholic=?, smoking=?, medicalHistory=?, isInsured=?, updatedBy=? WHERE userId=?";
+        var values = [
+            medicalDetails.isSpectacles,
+            medicalDetails.alcoholic,
+            medicalDetails.smoking,
+            medicalDetails.medicalHistory,
+            medicalDetails.isInsured,
+            medicalDetails.userId,
+            medicalDetails.userId,
+        ];
+
+        promises.push(new Promise((resolve, reject) => {
+            connection.query(sql, values, function (err, result) {
+                if (err) reject(err);
+                else {
+                    console.log("Number of records inserted: " + result.affectedRows);
+
+                    medicalDetails.id = result.insertId;
+                    response.medicalDetails = medicalDetails;
+                }
+                resolve();
+            });
+        }));
+    }
+
+    if ("personalDetails" in user) {
+        var personalDetails = user.personalDetails;
+        var sql =
+            "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
+        var values = [
+            personalDetails.gender,
+            personalDetails.primaryPhoneNumber,
+            personalDetails.secondaryPhoneNumber,
+            personalDetails.managedBy,
+            personalDetails.bio,
+            personalDetails.marriageType,
+            personalDetails.motherTongue,
+            personalDetails.familyType,
+            personalDetails.familyBio,
+            personalDetails.userId,
+            personalDetails.userId,
+        ];
+
+        promises.push(new Promise((resolve, reject) => {
+            connection.query(sql, values, function (err, result) {
+                if (err) reject(err);
+                else {
+                    console.log("Number of records inserted: " + result.affectedRows);
+
+                    personalDetails.id = result.insertId;
+                    response.personalDetails = personalDetails;
+                }
+                resolve();
+            });
+        }));
+    }
+
+    if ("personalDocumentDetails" in user) {
+        var personalDocument = user.personalDocument;
+        var sql =
+            "UPDATE `user_personal_document_master` SET  aadharId=?, voterId=?, drivingId=?, updatedBy=? WHERE userId=?";
+        var values = [
+            personalDocument.aadharId,
+            personalDocument.voterId,
+            personalDocument.drivingId,
+            personalDocument.userId,
+            personalDocument.userId,
+        ];
+
+        promises.push(new Promise((resolve, reject) => {
+            connection.query(sql, values, function (err, result) {
+                if (err) reject(err);
+                else {
+                    console.log("Number of records inserted: " + result.affectedRows);
+
+                    personalDocument.id = result.insertId;
+                    response.personalDocument = personalDocument;
+                }
+                resolve();
+            });
+        }));
+    }
+
+    if ("professionalDetails" in user) {
+        var professionalDetails = user.professionalDetails;
+        var sql =
+            "UPDATE `user_professional_details_master` SET incomeType=?, designation=?, jobLocation=?, incomeRange=?, updatedBy=? WHERE userId=?";
+        var values = [
+            professionalDetails.incomeType,
+            professionalDetails.designation,
+            professionalDetails.jobLocation,
+            professionalDetails.incomeRange,
+            professionalDetails.userId,
+            professionalDetails.userId,
+        ];
+
+        promises.push(new Promise((resolve, reject) => {
+            connection.query(sql, values, function (err, result) {
+                if (err) reject(err);
+                else {
+                    console.log("Number of records updated in professional: " + result.affectedRows);
+
+                    professionalDetails.id = result.insertId;
+                    response.professionalDetails = professionalDetails;
+                }
+                resolve();
+            });
+        }));
+    }
+
+    try {
+        if (promises.length > 0) {
+            await Promise.all(promises);
+            console.log("Profile/Put: Returning result");
+            res.status(200).json({
+                success: true,
+                data: user,
+            });
+        }
+        else
+            res.status(200).json({
+                success: false,
+                status: "Nothing to update",
+            });
+    } catch (err) {
+        res.status(400).json({
+            success: false,
+            status: err.message,
+        });
+    }
+}
+
 async function getProfileData(req, res, responseData, userId) {
     const promises = [];
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM `user_basic_details_master` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) responseData.error.basicDetails = err.message;
+            if (err) reject(err);
             else if (result.length > 0) {
                 console.log("Number of records fetched from basic: " + result.length);
 
@@ -1771,11 +1843,10 @@ async function getProfileData(req, res, responseData, userId) {
         });
     }));
 
-
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_additional_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) responseData.error.additionalDetails = err.message;
-            else {
+            if (err) reject(err);
+            else if (result.length > 0) {
                 console.log("Number of records from additional: " + result.length);
 
                 responseData.additionalDetails = result[0];
@@ -1787,8 +1858,8 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_address_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) responseData.error.addressDetails = err.message;
-            else {
+            if (err) reject(err);
+            else if (result.length > 0) {
                 console.log("Number of records from address: " + result.length);
 
                 responseData.addressDetails = result[0];
@@ -1800,8 +1871,8 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_educational_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) responseData.error.educationalDetails = err.message;
-            else {
+            if (err) reject(err);
+            else if (result.length > 0) {
                 console.log("Number of records from educational: " + result.length);
 
                 responseData.educationalDetails = result[0];
@@ -1813,8 +1884,8 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_kundali_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) responseData.error.kundaliDetails = err.message;
-            else {
+            if (err) reject(err);
+            else if (result.length > 0) {
                 console.log("Number of records from kundali: " + result.length);
 
                 responseData.kundaliDetails = result[0];
@@ -1826,8 +1897,8 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_medical_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) responseData.error.medicalDetails = err.message;
-            else {
+            if (err) reject(err);
+            else if (result.length > 0) {
                 console.log("Number of records from medical: " + result.length);
 
                 responseData.medicalDetails = result[0];
@@ -1839,8 +1910,8 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_personal_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) responseData.error.personalDetails = err;
-            else {
+            if (err) reject(err);
+            else if (result.length > 0) {
                 console.log("Number of records personal: " + result.length);
 
                 responseData.personalDetails = result[0];
@@ -1852,8 +1923,8 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_personal_document_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) responseData.error.personalDocument = err;
-            else {
+            if (err) reject(err);
+            else if (result.length > 0) {
                 console.log("Number of records from personal documents: " + result.length);
 
                 responseData.personalDocument = result[0];
@@ -1865,8 +1936,8 @@ async function getProfileData(req, res, responseData, userId) {
 
     promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_professional_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) responseData.error.professionalDetails = err;
-            else {
+            if (err) reject(err);
+            else if (result.length > 0) {
                 console.log("Number of records from professional: " + result.length);
 
                 responseData.professionalDetails = result[0];
@@ -1889,3 +1960,5 @@ async function getProfileData(req, res, responseData, userId) {
         });
     }
 }
+
+module.exports = router;
