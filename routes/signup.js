@@ -92,7 +92,7 @@ router.post('/', function (req, res, next) {
           isUserCodeVerified = await verifyUserCode(userCode);
         }
 
-        let refferCode = userCodeGenerator();
+        let refferCode = common.userCodeGenerator();
         var sql = `UPDATE users SET userCode=?, refferCode=?, createdBy=?, updatedBy=? WHERE id=?`;
         var values = [userCode, refferCode, result.insertId, result.insertId, result.insertId];
 
@@ -108,18 +108,20 @@ router.post('/', function (req, res, next) {
 
           if (results.affectedRows > 0) {
             const userToken = {};
+            userToken.username = user.email
             userToken.id = result.insertId;
-            userToken.username = user.email;
-            userToken.userCode = userCode;
+            userToken.category = '1';
             userToken.email = user.email;
-            userToken.refferCode = refferCode;
+            userToken.name = user.firstName;
+            userToken.referCode = refferCode;
+            userToken.userCode = userCode;
 
             let token;
 
             try {
               //Creating jwt token
               token = jwt.sign(
-                { userId: user.id, userData: userToken },
+                userToken,
                 "venture",
                 { expiresIn: "1h" }
               );
@@ -134,10 +136,10 @@ router.post('/', function (req, res, next) {
               .json({
                 success: true,
                 data: {
-                  data: userToken,
-                  token: token,
+                    userId: userToken.id,
+                    token: token,
                 },
-              });
+            });
           } else
             return res
               .status(200)
