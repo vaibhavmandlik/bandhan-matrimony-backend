@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 var router = express.Router();
 
 var connection = require('./connection')
+var notification = require('../services/notification');
 
 router.post('/', function (req, res, next) {
 
@@ -51,6 +52,18 @@ router.post('/', function (req, res, next) {
                     const error = new Error("Error! Something went wrong.");
                     return next(error);
                 }
+
+                var topic = 'venture_matrimony_notify_topic';
+
+                var message = {
+                    notification: {
+                        title: 'First notification',
+                        body: 'you got the notification'
+                    },
+                    topic: topic
+                };
+
+                notification.send(message);
 
                 return res
                     .status(200)
