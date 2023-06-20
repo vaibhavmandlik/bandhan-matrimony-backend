@@ -481,7 +481,7 @@ router.get("/", function (req, res, next) {
                 response.firstName = userData.firstName;
                 response.lastName = userData.lastName;
 
-                getProfileData(req, res, response, userId);
+                getProfileData(req, res, response, userData.id);
             } else {
                 res.status(200).json({
                     success: false,
@@ -804,8 +804,15 @@ router.get("/matches", function (req, res, next) {
     let id = req.query.id;
 
     // Query for interest request sent
-    connection.query(
-        'SELECT `id` FROM `users` WHERE enabled="1" AND  `id`!=?',
+    let a = connection.query(
+        "SELECT u.`id` " +
+        " FROM `users` u " +
+        "LEFT JOIN `user_report_master` rm ON u.`id` = rm.`reportedTo` " +
+        "LEFT JOIN `user_block_details_master` bm ON u.`id` = bm.`blockUserId` " +
+        "LEFT JOIN `user_interest_details_master` idm ON u.`id` = idm.`interestedInId` " +
+        "WHERE u.enabled = '1' " +
+        "AND u.`id` != ? " +
+        "AND (rm.`reportedTo` IS NULL OR bm.`blockUserId` IS NULL OR idm.`interestedInId` IS NULL);",
         [id],
         function (err, result, fields) {
             if (err)
@@ -843,6 +850,8 @@ router.get("/matches", function (req, res, next) {
                 });
         }
     );
+
+    console.log(a.sql);
 });
 
 router.post("/filter", function (req, res, next) {
