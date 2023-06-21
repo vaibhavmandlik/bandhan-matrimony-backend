@@ -805,15 +805,8 @@ router.get("/matches", function (req, res, next) {
 
     // Query for interest request sent
     let a = connection.query(
-        "SELECT u.`id` " +
-        " FROM `users` u " +
-        "LEFT JOIN `user_report_master` rm ON u.`id` = rm.`reportedTo` " +
-        "LEFT JOIN `user_block_details_master` bm ON u.`id` = bm.`blockUserId` " +
-        "LEFT JOIN `user_interest_details_master` idm ON u.`id` = idm.`interestedInId` " +
-        "WHERE u.enabled = '1' " +
-        "AND u.`id` != ? " +
-        "AND (rm.`reportedTo` IS NULL OR bm.`blockUserId` IS NULL OR idm.`interestedInId` IS NULL);",
-        [id],
+        "SELECT DISTINCT u.id AS employee_id FROM users u LEFT JOIN user_block_details_master ub ON u.id = ub.blockUserId AND ub.userId = ? LEFT JOIN user_report_master ur ON u.id = ur.reportedTo AND ur.userId = ? LEFT JOIN user_interest_details_master ui ON (u.id = ui.interestedInId AND ui.userId = ?) OR (u.id = ui.userId AND ui.interestedInId = ?) LEFT JOIN user_shortlisted_details_master us ON (u.id = us.shortlistedId AND us.userId = ?) WHERE u.id <> ? AND ub.id IS NULL AND ur.id IS NULL AND ui.id IS NULL AND us.id IS NULL",
+        [id, id, id, id, id, id],
         function (err, result, fields) {
             if (err)
                 return res.status(400).json({
@@ -823,7 +816,7 @@ router.get("/matches", function (req, res, next) {
             else if (result.length > 0) {
                 let userId = [];
                 result.forEach((element) => {
-                    userId.push(element.id);
+                    userId.push(element.employee_id);
                 });
 
                 connection.query(
@@ -1732,7 +1725,7 @@ async function executeUpdateQueries(req, res, user) {
     if ("personalDetails" in user) {
         var personalDetails = user.personalDetails;
         var sql =
-            "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
+            "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy='?', bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
         var values = [
             personalDetails.gender,
             personalDetails.primaryPhoneNumber,
@@ -1829,6 +1822,7 @@ async function executeUpdateQueries(req, res, user) {
                 status: "Nothing to update",
             });
     } catch (err) {
+        console.log("Profile/Put: Returning error result");
         res.status(400).json({
             success: false,
             status: err.message,

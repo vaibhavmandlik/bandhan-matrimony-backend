@@ -69,7 +69,7 @@ router.post('/', function (req, res, next) {
         });
 
         var sql = `INSERT INTO user_basic_details_master (userId, dateOfBirth) VALUES (?, ?)`;
-        var values = [result.insertId, user.basicDetails.dateOfBirth];
+        var values = [result.insertId, formatDate(user.basicDetails.dateOfBirth)];
   
         connection.query(sql, values, async function (err, result) {
           if (err) {
@@ -164,6 +164,20 @@ function verifyUserCode(userCode) {
         resolve(true);
       });
   });
+}
+
+function formatDate(date) {
+  var d = new Date(date),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+  if (month.length < 2) 
+      month = '0' + month;
+  if (day.length < 2) 
+      day = '0' + day;
+
+  return [year, month, day].join('-');
 }
 
 module.exports = router;
