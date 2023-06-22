@@ -1,67 +1,64 @@
 var express = require('express');
 var connection = require('./connection');
 var router = express.Router();
-var base64toFile = require('node-base64-to-file');
-var multer = require('multer');
-
-var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/')
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname)
-    }
-})
-var upload = multer({ storage: storage })
+const fs = require('fs');
+const path = require('path');
 
 
-router.post('/upload', upload.single('file'), async function (req, res, next) {
-    console.log(req.body.description);
-    res.status(200).send({ 'message': "file uploaded" });
-
+router.post('/upload', async function (req, res, next) {
     var fileData = req.body;
 
-
     try {
-        const filePath = await base64toFile(fileData.file, { filePath: './uploads', fileName: fileData.fileName });
-        console.log("File moved to: ./uploads/" + filePath);
+        const base64String = fileData.file;
+        const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
+        const mimeType = base64String.match(/data:image\/(\w+)/)[1];
+        const fileExtension = `.${mimeType}`;
+        const uniqueFileName = `${Date.now().toString()}_${fileData.userId}${fileExtension}`;
+        const imagePath = path.join('./uploads', uniqueFileName);
 
-        if (filePath) {
-            connection.query(
-                'INSERT INTO `user_document_details_master` (docType, docPath, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?)', ['./uploads/' + fileData.docType, filePath, fileData.createdBy, fileData.updatedBy],
-                function (err, results, fields) {
-                    if (err) {
-                        console.log(err.message);
+        fs.writeFile(imagePath, base64Data, 'base64', (err) => {
+            if (err) {
+                console.error('Error writing image file:', err);
+                return res
+                    .status(500)
+                    .json({
+                        success: false,
+                        status: "Something went wrong: " + err,
+                    });
+            } else {
+                console.log('Image file saved:', imagePath);
+                connection.query(
+                    'INSERT INTO `user_document_details_master` (userId, docType, docPath, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?)', [fileData.userId, fileData.docType, imagePath, fileData.userId, fileData.userId],
+                    function (err, results) {
+                        if (err) {
+                            console.log(err.message);
 
+                            return res
+                                .status(500)
+                                .json({
+                                    success: false,
+                                    status: "Something went wrong: " + err.message,
+                                });
+                        };
+
+                        console.log("Number of records inserted: " + results.affectedRows);
                         return res
                             .status(200)
                             .json({
-                                success: false,
-                                error: "Something went wrong: " + err.message,
+                                success: true,
+                                data: {
+                                    path: "/uploads/" + imagePath
+                                }
                             });
-                    };
-
-                    console.log("Number of records inserted: " + results.affectedRows);
-                    return res
-                        .status(200)
-                        .json({
-                            success: false,
-                            data: "/uploads/" + filePath
-                        });
-                });
-        } else
-            return res
-                .status(400)
-                .json({
-                    success: false,
-                    error: "Something went wrong: " + err,
-                });
+                    });
+            }
+        });
     } catch (error) {
         return res
-            .status(400)
+            .status(500)
             .json({
                 success: false,
-                error: "Something went wrong: " + error,
+                status: "Something went wrong: " + error,
             });
     }
 
@@ -74,9 +71,9 @@ router.get("/", function (req, res, next) {
 
     connection.query(sql, values, function (err, result) {
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 success: false,
-                message: err.message
+                status: err.message
             });
         }
         else if (result.length == 0) {
