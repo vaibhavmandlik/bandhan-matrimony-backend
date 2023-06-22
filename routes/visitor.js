@@ -16,7 +16,7 @@ router.post('/', function (req, res, next) {
         if (err)
             response.error = err;
         else {
-            console.log("Number of records deleted: " + result.affectedRows);
+            console.log("Number of records inserted: " + result.affectedRows);
 
             user.id = result.insertId;
             response.user = user;

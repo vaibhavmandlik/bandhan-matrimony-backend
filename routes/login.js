@@ -20,12 +20,12 @@ router.post('/', function (req, res, next) {
                     .status(200)
                     .json({
                         success: false,
-                        error: "User does not exists",
+                        status: "User does not exists",
                     });
             }
 
             if (results[0].password != user.password) {
-                return res.status(200).json({ success: false, error: "Incorrect password", });
+                return res.status(200).json({ success: false, status: "Incorrect password", });
             }
 
             results.forEach(element => {

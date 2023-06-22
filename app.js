@@ -11,6 +11,8 @@ var profileRouter = require('./routes/profile');
 var visitorRouter = require('./routes/visitor');
 var otprouter = require('./routes/otp');
 var reportrouter = require('./routes/report')
+var chatrouter = require('./routes/chat');
+var documentrouter = require('./routes/document');
 
 var app = express();
 
@@ -29,5 +31,7 @@ app.use('/profile',profileRouter);
 app.use('/visitor',visitorRouter);
 app.use('/otp', otprouter);
 app.use('/report',reportrouter);
+app.use('/chat',chatrouter);
+app.use('/document',documentrouter);
 
 module.exports = app;
