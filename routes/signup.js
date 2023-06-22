@@ -71,8 +71,8 @@ router.post('/', function (req, res, next) {
         });
 
         var sql = `INSERT INTO user_basic_details_master (userId, dateOfBirth) VALUES (?, ?)`;
-        var values = [result.insertId, user.basicDetails.dateOfBirth];
-
+        var values = [result.insertId, formatDate(user.basicDetails.dateOfBirth)];
+  
         connection.query(sql, values, async function (err, result) {
           if (err) {
             return res
@@ -110,20 +110,20 @@ router.post('/', function (req, res, next) {
 
           if (results.affectedRows > 0) {
             const userToken = {};
-            userToken.username = element.username
-            userToken.id = element.id;
-            userToken.category = element.category;
-            userToken.email = element.email;
-            userToken.name = element.firstName;
-            userToken.referCode = element.refferCode;
-            userToken.userCode = element.userCode;
+            userToken.username = user.email
+            userToken.id = result.insertId;
+            userToken.category = '1';
+            userToken.email = user.email;
+            userToken.name = user.firstName;
+            userToken.referCode = refferCode;
+            userToken.userCode = userCode;
 
             let token;
 
             try {
               //Creating jwt token
               token = jwt.sign(
-                { userId: user.id, userData: userToken },
+                userToken,
                 "venture",
                 { expiresIn: "1h" }
               );
@@ -138,10 +138,10 @@ router.post('/', function (req, res, next) {
               .json({
                 success: true,
                 data: {
-                  data: userToken,
-                  token: token,
+                    userId: userToken.id,
+                    token: token,
                 },
-              });
+            });
           } else
             return res
               .status(200)
@@ -166,6 +166,20 @@ function verifyUserCode(userCode) {
         resolve(true);
       });
   });
+}
+
+function formatDate(date) {
+  var d = new Date(date),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+  if (month.length < 2) 
+      month = '0' + month;
+  if (day.length < 2) 
+      day = '0' + day;
+
+  return [year, month, day].join('-');
 }
 
 module.exports = router;
