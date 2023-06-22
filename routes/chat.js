@@ -9,9 +9,9 @@ router.post("/", function (req, res, next) {
 
     connection.query(sql, values, function (err, result) {
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 success: false,
-                message: err.message
+                status: err.message
             });
         }
         else {
@@ -34,9 +34,9 @@ router.get("/all", function (req, res, next) {
 
     connection.query(sql, values, function (err, result) {
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 success: false,
-                message: err.message
+                status: err.message
             });
         }
         else if (result.length == 0) {
@@ -48,14 +48,14 @@ router.get("/all", function (req, res, next) {
         let profile = [];
         result.forEach((element, index) => {
 
-            var sql = 'SELECT firstName, lastName, id FROM users WHERE id=?';
+            var sql = 'SELECT u.id, u.firstName, u.lastName, udm.docType FROM users u LEFT JOIN user_document_details_master udm ON u.id=udm.userId WHERE u.id=?';
             var values = [element.userId != user ? element.userId : element.toId];
 
             connection.query(sql, values, function (err, results) {
                 if (err) {
-                    return res.status(400).json({
+                    return res.status(500).json({
                         success: false,
-                        message: err.message
+                        status: err.message
                     });
                 }
 
@@ -66,8 +66,8 @@ router.get("/all", function (req, res, next) {
                             isPresent = true;
                     });
 
-                    if(!isPresent)
-                    profile.push(user);
+                    if (!isPresent)
+                        profile.push(user);
                 });
 
                 if (index >= (result.length - 1))
@@ -88,9 +88,9 @@ router.get("/byId", function (req, res, next) {
 
     connection.query(sql, values, function (err, result) {
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 success: false,
-                message: err.message
+                status: err.message
             });
         }
         else {

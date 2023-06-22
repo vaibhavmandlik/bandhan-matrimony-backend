@@ -11,14 +11,23 @@ router.get('/otp', function (req, res, next) {
     // simple query
     connection.query(
         'SELECT * FROM `users` WHERE username=?', [user.username],
-        function (err, results, fields) {
+        function (err, results) {
+            if (err)
+                return res
+                    .status(500)
+                    .json({
+                        success: false,
+                        status: err.message,
+                    });
+
             console.log(results[0]);
+
             if (results.length == 0) {
                 return res
                     .status(200)
                     .json({
                         success: false,
-                        error: "User does not exists",
+                        status: "User does not exists",
                     });
             }
 

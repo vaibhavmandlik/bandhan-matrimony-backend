@@ -12,8 +12,16 @@ router.post('/', function (req, res, next) {
 
     // simple query
     connection.query(
-        'SELECT * FROM `users` WHERE username=?', [user.username],
-        function (err, results, fields) {
+        'SELECT u.*, udm.docPath FROM `users` u LEFT JOIN user_document_details_master udm ON u.id=udm.userId WHERE username=?', [user.username],
+        function (err, results) {
+            if (err)
+                return res
+                    .status(500)
+                    .json({
+                        success: false,
+                        status: err.message,
+                    });
+                    
             console.log(results[0]);
             if (results.length == 0) {
                 return res
