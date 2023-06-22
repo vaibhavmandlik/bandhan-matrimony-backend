@@ -14,12 +14,19 @@ router.post('/', function (req, res, next) {
   connection.query(
     'SELECT * FROM `users` WHERE username=?', [user.email],
     function (err, results, fields) {
+      if (err) return res
+        .status(500)
+        .json({
+          success: false,
+          status: err.message,
+        });
+
       if (results.length > 0)
         return res
           .status(200)
           .json({
             success: false,
-            error: "User already exists",
+            status: "User already exists",
           });
 
       var user = req.body;
@@ -29,10 +36,10 @@ router.post('/', function (req, res, next) {
       connection.query(sql, values, async function (err, result) {
         if (err) {
           return res
-            .status(200)
+            .status(500)
             .json({
               success: false,
-              error: "Something went wrong: " + err,
+              status: err.message,
             })
         }
 
@@ -44,10 +51,10 @@ router.post('/', function (req, res, next) {
         connection.query(sql, values, async function (err, result) {
           if (err) {
             return res
-              .status(200)
+              .status(500)
               .json({
                 success: false,
-                error: "Something went wrong: " + err,
+                status: err.message,
               })
           }
 
@@ -60,10 +67,10 @@ router.post('/', function (req, res, next) {
         connection.query(sql, values, async function (err, result) {
           if (err) {
             return res
-              .status(200)
+              .status(500)
               .json({
                 success: false,
-                error: "Something went wrong: " + err,
+                status: err.message,
               })
           }
 
@@ -72,14 +79,14 @@ router.post('/', function (req, res, next) {
 
         var sql = `INSERT INTO user_basic_details_master (userId, dateOfBirth) VALUES (?, ?)`;
         var values = [result.insertId, formatDate(user.basicDetails.dateOfBirth)];
-  
+
         connection.query(sql, values, async function (err, result) {
           if (err) {
             return res
-              .status(200)
+              .status(500)
               .json({
                 success: false,
-                error: "Something went wrong: " + err,
+                status: err.message,
               })
           }
 
@@ -101,10 +108,10 @@ router.post('/', function (req, res, next) {
         connection.query(sql, values, function (err, results, fields) {
           if (err) {
             return res
-              .status(200)
+              .status(500)
               .json({
                 success: false,
-                error: "Something went wrong: " + err,
+                status: err.message,
               });
           }
 
@@ -138,20 +145,19 @@ router.post('/', function (req, res, next) {
               .json({
                 success: true,
                 data: {
-                    userId: userToken.id,
-                    token: token,
+                  userId: userToken.id,
+                  token: token,
                 },
-            });
+              });
           } else
             return res
-              .status(200)
+              .status(500)
               .json({
                 success: false,
-                error: "Something went wrong",
+                status: "Something went wrong",
               });
         });
       });
-
     });
 });
 
@@ -170,14 +176,14 @@ function verifyUserCode(userCode) {
 
 function formatDate(date) {
   var d = new Date(date),
-      month = '' + (d.getMonth() + 1),
-      day = '' + d.getDate(),
-      year = d.getFullYear();
+    month = '' + (d.getMonth() + 1),
+    day = '' + d.getDate(),
+    year = d.getFullYear();
 
-  if (month.length < 2) 
-      month = '0' + month;
-  if (day.length < 2) 
-      day = '0' + day;
+  if (month.length < 2)
+    month = '0' + month;
+  if (day.length < 2)
+    day = '0' + day;
 
   return [year, month, day].join('-');
 }

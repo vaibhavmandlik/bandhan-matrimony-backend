@@ -469,7 +469,12 @@ router.get("/", function (req, res, next) {
     const userCode = req.query.userCode;
 
     connection.query("SELECT * FROM users WHERE enabled='1' AND userCode=?", [userCode], function (err, result) {
-        if (err) response.error.message = err.message;
+        if (err) return res
+            .status(500)
+            .json({
+                success: false,
+                status: err.message
+            });
         else {
             console.log("Number of records fetched: " + result.length);
 
@@ -521,7 +526,7 @@ router.get("/shortlisted", function (req, res, next) {
         [user],
         function (err, results, fields) {
             if (err)
-                return res.status(400).json({
+                return res.status(500).json({
                     success: false,
                     status: err.message,
                 });
@@ -532,18 +537,18 @@ router.get("/shortlisted", function (req, res, next) {
                     data: [],
                 });
 
-            let shortlisted = [];   
+            let shortlisted = [];
             results.forEach((element) => {
                 shortlisted.push(element.userId);
             });
 
             connection.query(
-                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
                 [shortlisted],
                 function (err, results, fields) {
                     if (err) {
-                        return res.status(200).json({
-                            success: true,
+                        return res.status(500).json({
+                            success: false,
                             status: err.message,
                         });
                     }
@@ -613,7 +618,7 @@ router.get("/interest", function (req, res, next) {
         [user],
         function (err, result, fields) {
             if (err)
-                return res.status(400).json({
+                return res.status(500).json({
                     success: false,
                     status: err.message,
                 });
@@ -624,12 +629,12 @@ router.get("/interest", function (req, res, next) {
                 });
 
                 connection.query(
-                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
                     [sentIds],
                     function (err, results, fields) {
                         if (err) {
-                            return res.status(400).json({
-                                success: true,
+                            return res.status(500).json({
+                                success: false,
                                 status: err.message,
                             });
                         }
@@ -648,7 +653,11 @@ router.get("/interest", function (req, res, next) {
                         interestSent = results;
                     }
                 );
-            }
+            } else
+                return res.status(200).json({
+                    success: true,
+                    status: "No records found",
+                });
         }
     );
 
@@ -658,7 +667,7 @@ router.get("/interest", function (req, res, next) {
         [user],
         function (err, result, fields) {
             if (err)
-                return res.status(400).json({
+                return res.status(500).json({
                     success: false,
                     status: err.message,
                 });
@@ -669,12 +678,12 @@ router.get("/interest", function (req, res, next) {
                 });
 
                 connection.query(
-                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
                     [received],
                     function (err, results, fields) {
                         if (err)
-                            return res.status(400).json({
-                                success: true,
+                            return res.status(500).json({
+                                success: false,
                                 status: err.message,
                             });
 
@@ -703,8 +712,7 @@ router.get("/interest", function (req, res, next) {
                     success: true,
                     status: "No records found",
                 });
-        }
-    );
+        });
 });
 
 router.put("/interest", function (req, res, next) {
@@ -804,12 +812,12 @@ router.get("/matches", function (req, res, next) {
     let id = req.query.id;
 
     // Query for interest request sent
-    let a = connection.query(
+    connection.query(
         "SELECT DISTINCT u.id AS employee_id FROM users u LEFT JOIN user_block_details_master ub ON u.id = ub.blockUserId AND ub.userId = ? LEFT JOIN user_report_master ur ON u.id = ur.reportedTo AND ur.userId = ? LEFT JOIN user_interest_details_master ui ON (u.id = ui.interestedInId AND ui.userId = ?) OR (u.id = ui.userId AND ui.interestedInId = ?) LEFT JOIN user_shortlisted_details_master us ON (u.id = us.shortlistedId AND us.userId = ?) WHERE u.id <> ? AND ub.id IS NULL AND ur.id IS NULL AND ui.id IS NULL AND us.id IS NULL",
         [id, id, id, id, id, id],
         function (err, result, fields) {
             if (err)
-                return res.status(400).json({
+                return res.status(500).json({
                     success: false,
                     status: err.message,
                 });
@@ -820,12 +828,12 @@ router.get("/matches", function (req, res, next) {
                 });
 
                 connection.query(
-                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
                     [userId],
                     function (err, results, fields) {
                         if (err) {
-                            return res.status(400).json({
-                                success: true,
+                            return res.status(500).json({
+                                success: false,
                                 status: err.message,
                             });
                         }
@@ -843,8 +851,6 @@ router.get("/matches", function (req, res, next) {
                 });
         }
     );
-
-    console.log(a.sql);
 });
 
 router.post("/filter", function (req, res, next) {
@@ -1873,6 +1879,19 @@ async function getProfileData(req, res, responseData, userId) {
     }));
 
     promises.push(new Promise((resolve, reject) => {
+        connection.query("SELECT * FROM user_document_details_master WHERE enabled='1' AND docType='1' AND userId=?", [userId], function (err, result) {
+            if (err) reject(err);
+            else if (result.length > 0) {
+                console.log("Number of records from educational: " + result.length);
+
+                responseData.educationalDetails = result[0];
+            }
+
+            resolve();
+        });
+    }));
+
+    promises.push(new Promise((resolve, reject) => {
         connection.query("SELECT * FROM user_educational_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
             if (err) reject(err);
             else if (result.length > 0) {
@@ -1957,7 +1976,7 @@ async function getProfileData(req, res, responseData, userId) {
             data: responseData,
         });
     } catch (err) {
-        res.status(400).json({
+        res.status(500).json({
             success: false,
             status: err.message,
         });

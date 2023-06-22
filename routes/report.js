@@ -11,7 +11,7 @@ router.post('/', function (req, res, next) {
     var values = [user.userId, user.reportType, user.reportedTo, user.reportMessage, user.userId];
 
     connection.query(sql, values, function (err, result) {
-        if (err) return res.status(400).json({
+        if (err) return res.status(500).json({
             success: false,
             status: err.message
         });
