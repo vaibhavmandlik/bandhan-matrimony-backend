@@ -433,7 +433,6 @@ router.put("/", function (req, res, next) {
     var user = req.body;
 
     executeUpdateQueries(req, res, user);
-
 });
 
 router.get("/", function (req, res, next) {
@@ -468,34 +467,36 @@ router.get("/", function (req, res, next) {
     const userId = req.query.userId;
     const userCode = req.query.userCode;
 
-    connection.query("SELECT * FROM users WHERE enabled='1' AND userCode=?", [userCode], function (err, result) {
-        if (err) return res
-            .status(500)
-            .json({
-                success: false,
-                status: err.message
-            });
-        else {
-            console.log("Number of records fetched: " + result.length);
-
-            if (result.length > 0) {
-                let userData = result[0];
-
-                response.id = userData.id;
-                response.userCode = userData.userCode;
-                response.firstName = userData.firstName;
-                response.lastName = userData.lastName;
-
-                getProfileData(req, res, response, userData.id);
-            } else {
-                res.status(200).json({
+    connection.query(
+        "SELECT * FROM users WHERE enabled='1' AND userCode=?",
+        [userCode],
+        function (err, result) {
+            if (err)
+                return res.status(500).json({
                     success: false,
-                    status: "User data not found",
+                    status: err.message,
                 });
-            }
+            else {
+                console.log("Number of records fetched: " + result.length);
 
+                if (result.length > 0) {
+                    let userData = result[0];
+
+                    response.id = userData.id;
+                    response.userCode = userData.userCode;
+                    response.firstName = userData.firstName;
+                    response.lastName = userData.lastName;
+
+                    getProfileData(req, res, response, userData.id);
+                } else {
+                    res.status(200).json({
+                        success: false,
+                        status: "User data not found",
+                    });
+                }
+            }
         }
-    });
+    );
 });
 
 router.post("/shortlisted", function (req, res, next) {
@@ -612,106 +613,105 @@ router.get("/interest", function (req, res, next) {
     let interestSent = [];
     let interestReceived = [];
 
-    // Query for interest request sent
-    connection.query(
-        'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?',
-        [user],
-        function (err, result, fields) {
-            if (err)
-                return res.status(500).json({
-                    success: false,
-                    status: err.message,
-                });
-            else if (result.length > 0) {
-                let sentIds = [];
-                result.forEach((element) => {
-                    sentIds.push(element.interestedInId);
-                });
+    const promises = [];
 
-                connection.query(
-                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
-                    [sentIds],
-                    function (err, results, fields) {
-                        if (err) {
-                            return res.status(500).json({
-                                success: false,
-                                status: err.message,
-                            });
-                        }
-
-                        results.map((m) => {
-                            let interestRequest = result.filter(
-                                (a) => a.interestedInId == m.id
-                            );
-
-                            m.isAccepted = interestRequest[0].isAccepted;
-                            m.interestId = interestRequest[0].id;
-
-                            return m;
+    promises.push(
+        new Promise((resolve, reject) => {
+            // Query for interest request sent
+            connection.query(
+                'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?',
+                [user],
+                function (err, result, fields) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        let sentIds = [];
+                        result.forEach((element) => {
+                            sentIds.push(element.interestedInId);
                         });
 
-                        interestSent = results;
-                    }
-                );
-            } else
-                return res.status(200).json({
-                    success: true,
-                    status: "No records found",
-                });
-        }
+                        connection.query(
+                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
+                            [sentIds],
+                            function (err, results, fields) {
+                                if (err) {
+                                    reject(err);
+                                }
+
+                                results.map((m) => {
+                                    let interestRequest = result.filter(
+                                        (a) => a.interestedInId == m.id
+                                    );
+
+                                    m.isAccepted = interestRequest[0].isAccepted;
+                                    m.interestId = interestRequest[0].id;
+
+                                    return m;
+                                });
+
+                                interestSent = results;
+                                resolve();
+                            }
+                        );
+                    } else resolve();
+                }
+            );
+        })
     );
 
-    // Query for interest request received
-    connection.query(
-        'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?',
-        [user],
-        function (err, result, fields) {
-            if (err)
-                return res.status(500).json({
-                    success: false,
-                    status: err.message,
-                });
-            else if (result.length > 0) {
-                let received = [];
-                result.forEach((element) => {
-                    received.push(element.userId);
-                });
+    promises.push(new Promise((resolve, reject) => {
+        // Query for interest request received
+        connection.query(
+            'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?',
+            [user],
+            function (err, result, fields) {
+                if (err) reject(err);
+                else if (result.length > 0) {
+                    let received = [];
+                    result.forEach((element) => {
+                        received.push(element.userId);
+                    });
 
-                connection.query(
-                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
-                    [received],
-                    function (err, results, fields) {
-                        if (err)
-                            return res.status(500).json({
-                                success: false,
-                                status: err.message,
+                    connection.query(
+                        "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
+                        [received],
+                        function (err, results, fields) {
+                            if (err) reject(err);
+
+                            results.map((m) => {
+                                let interestRequest = result.filter((a) => a.userId == m.id);
+
+                                m.isAccepted = interestRequest[0].isAccepted;
+                                m.interestId = interestRequest[0].id;
+
+                                return m;
                             });
 
-                        results.map((m) => {
-                            let interestRequest = result.filter((a) => a.userId == m.id);
+                            interestReceived = results;
 
-                            m.isAccepted = interestRequest[0].isAccepted;
-                            m.interestId = interestRequest[0].id;
+                            resolve();
+                        }
+                    );
+                } else
+                    resolve();
+            }
+        );
+    }));
 
-                            return m;
-                        });
-
-                        interestReceived = results;
-
-                        return res.status(200).json({
-                            success: true,
-                            data: {
-                                sent: interestSent,
-                                received: interestReceived,
-                            },
-                        });
-                    }
-                );
-            } else
-                return res.status(200).json({
-                    success: true,
-                    status: "No records found",
-                });
+    Promise.all(promises)
+        .then(() => {
+            return res.status(200).json({
+                success: true,
+                data: {
+                    sent: interestSent,
+                    received: interestReceived,
+                },
+            });
+        })
+        .catch((err) => {
+            return res.status(400).json({
+                success: false,
+                status: err.message,
+            });
         });
 });
 
@@ -727,12 +727,11 @@ router.put("/interest", function (req, res, next) {
             console.log("Id not found");
             return res.status(400).json({
                 success: false,
-                message: "Id Not Found"
+                message: "Id Not Found",
             });
-
-        }
-        else if (result.length > 0) {
-            var sql = "UPDATE `user_interest_details_master` SET  isAccepted=? WHERE id=?";
+        } else if (result.length > 0) {
+            var sql =
+                "UPDATE `user_interest_details_master` SET  isAccepted=? WHERE id=?";
             var values = [action, id];
 
             connection.query(sql, values, function (err, result) {
@@ -743,7 +742,6 @@ router.put("/interest", function (req, res, next) {
                         success: true,
                     });
                 }
-
             });
         }
     });
@@ -760,12 +758,11 @@ router.delete("/interest", function (req, res, next) {
             console.log("Id not found");
             return res.status(400).json({
                 success: false,
-                message: "Id Not Found"
+                message: "Id Not Found",
             });
-
-        }
-        else if (result.length > 0) {
-            var sql = "UPDATE `user_interest_details_master` SET enabled='0' WHERE id=?";
+        } else if (result.length > 0) {
+            var sql =
+                "UPDATE `user_interest_details_master` SET enabled='0' WHERE id=?";
             var values = [id];
 
             connection.query(sql, values, function (err, result) {
@@ -776,7 +773,6 @@ router.delete("/interest", function (req, res, next) {
                         success: true,
                     });
                 }
-
             });
         }
     });
@@ -785,26 +781,35 @@ router.delete("/interest", function (req, res, next) {
 router.post("/interest", function (req, res, next) {
     const user = req.body;
 
-    connection.query("SELECT id FROM users WHERE userCode=?", [user.interestedIn], function (err, result) {
-        if (err) response.error = err;
-
-        var sql = `INSERT INTO user_interest_details_master (userId, interestedInId, createdBy, updatedBy, updatedOn) VALUES (?, ?, ?, ?, ?)`;
-        var values = [user.userId, result[0].id, user.userId, user.userId, new Date()];
-        connection.query(sql, values, function (err, result) {
+    connection.query(
+        "SELECT id FROM users WHERE userCode=?",
+        [user.interestedIn],
+        function (err, result) {
             if (err) response.error = err;
-            else {
-                console.log("Number of records Inserted: " + result.affectedRows);
 
-                user.id = result.insertId;
-                response.user = user;
-            }
-            return res.status(200).json({
-                success: true,
-                data: response,
+            var sql = `INSERT INTO user_interest_details_master (userId, interestedInId, createdBy, updatedBy, updatedOn) VALUES (?, ?, ?, ?, ?)`;
+            var values = [
+                user.userId,
+                result[0].id,
+                user.userId,
+                user.userId,
+                new Date(),
+            ];
+            connection.query(sql, values, function (err, result) {
+                if (err) response.error = err;
+                else {
+                    console.log("Number of records Inserted: " + result.affectedRows);
+
+                    user.id = result.insertId;
+                    response.user = user;
+                }
+                return res.status(200).json({
+                    success: true,
+                    data: response,
+                });
             });
-        });
-    });
-
+        }
+    );
 });
 
 router.get("/matches", function (req, res, next) {
@@ -967,91 +972,15 @@ async function executeQueries(req, res) {
     let responseData = [];
 
     if ("fromHeight" in req.body && "toHeight" in req.body) {
-
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(
-                "SELECT `userId` FROM `user_basic_details_master` WHERE `height` <= ? OR `height`>=?",
-                [req.body.fromHeight, req.body.toHeight],
-                function (err, userResult, fields) {
-                    if (err) {
-                        reject(err);
-                    } else if (userResult.length > 0) {
-                        let userId = [];
-                        userResult.forEach((element) => {
-                            userId.push(element.userId);
-                        });
-
-                        connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                            [userId],
-                            function (err, results, fields) {
-                                if (err) {
-                                    reject(err);
-                                }
-
-                                if (results.length > 0) {
-                                    responseData = checkDuplicateResponse(results, responseData);
-                                }
-                                resolve();
-                            }
-                        );
-                    } else {
-                        resolve();
-                    }
-                }
-            );
-        }));
-    }
-
-    if ("fromWeight" in req.body && "toWeight" in req.body) {
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(
-                "SELECT `userId` FROM `user_basic_details_master` WHERE `weight` <= ? OR `weight`>=?",
-                [req.body.fromWeight, req.body.toWeight],
-                function (err, userResult, fields) {
-                    if (err) {
-                        reject(err);
-                    } else if (userResult.length > 0) {
-                        let userId = [];
-                        userResult.forEach((element) => {
-                            userId.push(element.userId);
-                        });
-
-                        connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                            [userId],
-                            function (err, results, fields) {
-                                if (err) {
-                                    reject(err);
-                                }
-
-                                if (results.length > 0) {
-                                    responseData = checkDuplicateResponse(results, responseData);
-                                }
-                                resolve();
-                            }
-                        );
-                    } else {
-                        resolve();
-                    }
-                }
-            );
-        }));
-    }
-
-    if ("location" in req.body) {
-
-        if (locations != "" || locations != null || locations != undefined) {
-            let locations = req.body.location.split(",");
-
-            promises.push(new Promise((resolve, reject) => {
+        promises.push(
+            new Promise((resolve, reject) => {
                 connection.query(
-                    "SELECT `userId` FROM `user_address_details_master` WHERE `city` IN (?)",
-                    [locations],
+                    "SELECT `userId` FROM `user_basic_details_master` WHERE `height` <= ? OR `height`>=?",
+                    [req.body.fromHeight, req.body.toHeight],
                     function (err, userResult, fields) {
-                        if (err)
+                        if (err) {
                             reject(err);
-                        else if (userResult.length > 0) {
+                        } else if (userResult.length > 0) {
                             let userId = [];
                             userResult.forEach((element) => {
                                 userId.push(element.userId);
@@ -1066,9 +995,11 @@ async function executeQueries(req, res) {
                                     }
 
                                     if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(results, responseData);
+                                        responseData = checkDuplicateResponse(
+                                            results,
+                                            responseData
+                                        );
                                     }
-
                                     resolve();
                                 }
                             );
@@ -1077,217 +1008,383 @@ async function executeQueries(req, res) {
                         }
                     }
                 );
-            }));
+            })
+        );
+    }
+
+    if ("fromWeight" in req.body && "toWeight" in req.body) {
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(
+                    "SELECT `userId` FROM `user_basic_details_master` WHERE `weight` <= ? OR `weight`>=?",
+                    [req.body.fromWeight, req.body.toWeight],
+                    function (err, userResult, fields) {
+                        if (err) {
+                            reject(err);
+                        } else if (userResult.length > 0) {
+                            let userId = [];
+                            userResult.forEach((element) => {
+                                userId.push(element.userId);
+                            });
+
+                            connection.query(
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                [userId],
+                                function (err, results, fields) {
+                                    if (err) {
+                                        reject(err);
+                                    }
+
+                                    if (results.length > 0) {
+                                        responseData = checkDuplicateResponse(
+                                            results,
+                                            responseData
+                                        );
+                                    }
+                                    resolve();
+                                }
+                            );
+                        } else {
+                            resolve();
+                        }
+                    }
+                );
+            })
+        );
+    }
+
+    if ("location" in req.body) {
+        if (locations != "" || locations != null || locations != undefined) {
+            let locations = req.body.location.split(",");
+
+            promises.push(
+                new Promise((resolve, reject) => {
+                    connection.query(
+                        "SELECT `userId` FROM `user_address_details_master` WHERE `city` IN (?)",
+                        [locations],
+                        function (err, userResult, fields) {
+                            if (err) reject(err);
+                            else if (userResult.length > 0) {
+                                let userId = [];
+                                userResult.forEach((element) => {
+                                    userId.push(element.userId);
+                                });
+
+                                connection.query(
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                    [userId],
+                                    function (err, results, fields) {
+                                        if (err) {
+                                            reject(err);
+                                        }
+
+                                        if (results.length > 0) {
+                                            responseData = checkDuplicateResponse(
+                                                results,
+                                                responseData
+                                            );
+                                        }
+
+                                        resolve();
+                                    }
+                                );
+                            } else {
+                                resolve();
+                            }
+                        }
+                    );
+                })
+            );
         }
     }
 
     if ("religion" in req.body) {
+        if (
+            req.body.religion != "" ||
+            req.body.religion != null ||
+            req.body.religion != undefined
+        ) {
+            promises.push(
+                new Promise((resolve, reject) => {
+                    connection.query(
+                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `religion` = ?",
+                        [req.body.religion],
+                        function (err, userResult, fields) {
+                            if (err) reject(err);
+                            else if (userResult.length > 0) {
+                                let userId = [];
+                                userResult.forEach((element) => {
+                                    userId.push(element.userId);
+                                });
 
-        if (req.body.religion != "" || req.body.religion != null || req.body.religion != undefined) {
-            promises.push(new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_kundali_details_master` WHERE `religion` = ?",
-                    [req.body.religion],
-                    function (err, userResult, fields) {
-                        if (err)
-                            reject(err);
-                        else if (userResult.length > 0) {
-                            let userId = [];
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
+                                connection.query(
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                    [userId],
+                                    function (err, results, fields) {
+                                        if (err) {
+                                            reject(err);
+                                        }
+                                        if (results.length > 0) {
+                                            responseData = checkDuplicateResponse(
+                                                results,
+                                                responseData
+                                            );
+                                        }
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                                [userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
+                                        resolve();
                                     }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(results, responseData);
-                                    }
-
-                                    resolve();
-                                }
-                            );
-                        } else {
-                            resolve();
+                                );
+                            } else {
+                                resolve();
+                            }
                         }
-                    }
-                );
-            }));
+                    );
+                })
+            );
         }
     }
 
     if ("maritalStatus" in req.body) {
+        if (
+            req.body.maritalStatus != "" ||
+            req.body.maritalStatus != null ||
+            req.body.maritalStatus != undefined
+        ) {
+            promises.push(
+                new Promise((resolve, reject) => {
+                    connection.query(
+                        "SELECT `userId` FROM `user_personal_details_master` WHERE `marriageType` = ?",
+                        [req.body.maritalStatus],
+                        function (err, userResult, fields) {
+                            if (err) reject(err);
+                            else if (userResult.length > 0) {
+                                let userId = [];
+                                userResult.forEach((element) => {
+                                    userId.push(element.userId);
+                                });
 
-        if (req.body.maritalStatus != "" || req.body.maritalStatus != null || req.body.maritalStatus != undefined) {
-            promises.push(new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_personal_details_master` WHERE `marriageType` = ?",
-                    [req.body.maritalStatus],
-                    function (err, userResult, fields) {
-                        if (err)
-                            reject(err);
-                        else if (userResult.length > 0) {
-                            let userId = [];
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
+                                connection.query(
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                    [userId],
+                                    function (err, results, fields) {
+                                        if (err) {
+                                            reject(err);
+                                        }
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                                [userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
+                                        if (results.length > 0) {
+                                            responseData = checkDuplicateResponse(
+                                                results,
+                                                responseData
+                                            );
+                                        }
+
+                                        resolve();
                                     }
-
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(results, responseData);
-                                    }
-
-                                    resolve();
-                                }
-                            );
-                        } else {
-                            resolve();
+                                );
+                            } else {
+                                resolve();
+                            }
                         }
-                    }
-                );
-            }));
+                    );
+                })
+            );
         }
     }
 
     if ("casteSubcaste" in req.body) {
+        if (
+            req.body.casteSubcaste != "" ||
+            req.body.casteSubcaste != null ||
+            req.body.casteSubcaste != undefined
+        ) {
+            promises.push(
+                new Promise((resolve, reject) => {
+                    let a = req.body.casteSubcaste.split(",");
 
-        if (req.body.casteSubcaste != "" || req.body.casteSubcaste != null || req.body.casteSubcaste != undefined) {
-            promises.push(new Promise((resolve, reject) => {
-                let a = req.body.casteSubcaste.split(",");
+                    connection.query(
+                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `caste` = ? AND `subCaste` = ?",
+                        [a[0], a[1]],
+                        function (err, userResult, fields) {
+                            if (err) reject(err);
+                            else if (userResult.length > 0) {
+                                let userId = [];
+                                userResult.forEach((element) => {
+                                    userId.push(element.userId);
+                                });
 
-                connection.query(
-                    "SELECT `userId` FROM `user_kundali_details_master` WHERE `caste` = ? AND `subCaste` = ?",
-                    [a[0], a[1]],
-                    function (err, userResult, fields) {
-                        if (err)
-                            reject(err);
-                        else if (userResult.length > 0) {
-                            let userId = [];
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
+                                connection.query(
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                    [userId],
+                                    function (err, results, fields) {
+                                        if (err) {
+                                            reject(err);
+                                        }
+                                        if (results.length > 0) {
+                                            responseData = checkDuplicateResponse(
+                                                results,
+                                                responseData
+                                            );
+                                        }
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                                [userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
+                                        resolve();
                                     }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(results, responseData);
-                                    }
-
-                                    resolve();
-                                }
-                            );
-                        } else {
-                            resolve();
+                                );
+                            } else {
+                                resolve();
+                            }
                         }
-                    }
-                );
-            }));
+                    );
+                })
+            );
         }
     }
 
     if ("motherTongue" in req.body) {
+        if (
+            req.body.motherTongue != "" ||
+            req.body.motherTongue != null ||
+            req.body.motherTongue != undefined
+        ) {
+            promises.push(
+                new Promise((resolve, reject) => {
+                    connection.query(
+                        "SELECT `userId` FROM `user_personal_details_master` WHERE `motherTongue` = ?",
+                        [req.body.motherTongue],
+                        function (err, userResult, fields) {
+                            if (err) reject(err);
+                            else if (userResult.length > 0) {
+                                let userId = [];
+                                userResult.forEach((element) => {
+                                    userId.push(element.userId);
+                                });
 
-        if (req.body.motherTongue != "" || req.body.motherTongue != null || req.body.motherTongue != undefined) {
-            promises.push(new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_personal_details_master` WHERE `motherTongue` = ?",
-                    [req.body.motherTongue],
-                    function (err, userResult, fields) {
-                        if (err)
-                            reject(err);
-                        else if (userResult.length > 0) {
-                            let userId = [];
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
+                                connection.query(
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                    [userId],
+                                    function (err, results, fields) {
+                                        if (err) {
+                                            reject(err);
+                                        }
+                                        if (results.length > 0) {
+                                            responseData = checkDuplicateResponse(
+                                                results,
+                                                responseData
+                                            );
+                                        }
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                                [userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
+                                        resolve();
                                     }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(results, responseData);
-                                    }
-
-                                    resolve();
-                                }
-                            );
-                        } else {
-                            resolve();
+                                );
+                            } else {
+                                resolve();
+                            }
                         }
-                    }
-                );
-            }));
+                    );
+                })
+            );
         }
     }
 
     if ("bornAfter" in req.body) {
+        if (
+            req.body.bornAfter != "" ||
+            req.body.bornAfter != null ||
+            req.body.bornAfter != undefined
+        ) {
+            promises.push(
+                new Promise((resolve, reject) => {
+                    connection.query(
+                        "SELECT `userId` FROM `user_basic_details_master` WHERE YEAR(`dateOfBirth`) >= ?",
+                        [req.body.bornAfter],
+                        function (err, userResult, fields) {
+                            if (err) reject(err);
+                            else if (userResult.length > 0) {
+                                let userId = [];
+                                userResult.forEach((element) => {
+                                    userId.push(element.userId);
+                                });
 
-        if (req.body.bornAfter != "" || req.body.bornAfter != null || req.body.bornAfter != undefined) {
-            promises.push(new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_basic_details_master` WHERE YEAR(`dateOfBirth`) >= ?",
-                    [req.body.bornAfter],
-                    function (err, userResult, fields) {
-                        if (err)
-                            reject(err);
-                        else if (userResult.length > 0) {
-                            let userId = [];
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
+                                connection.query(
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                    [userId],
+                                    function (err, results, fields) {
+                                        if (err) {
+                                            reject(err);
+                                        }
+                                        if (results.length > 0) {
+                                            responseData = checkDuplicateResponse(
+                                                results,
+                                                responseData
+                                            );
+                                        }
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                                [userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
+                                        resolve();
                                     }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(results, responseData);
-                                    }
-
-                                    resolve();
-                                }
-                            );
-                        } else {
-                            resolve();
+                                );
+                            } else {
+                                resolve();
+                            }
                         }
-                    }
-                );
-            }));
+                    );
+                })
+            );
         }
     }
 
     if ("mangalik" in req.body) {
-        if (req.body.mangalik != "" || req.body.mangalik != null || req.body.mangalik != undefined) {
-            promises.push(new Promise((resolve, reject) => {
+        if (
+            req.body.mangalik != "" ||
+            req.body.mangalik != null ||
+            req.body.mangalik != undefined
+        ) {
+            promises.push(
+                new Promise((resolve, reject) => {
+                    connection.query(
+                        "SELECT `userId` FROM `user_kundali_details_master` WHERE manglik = ?",
+                        [req.body.mangalik],
+                        function (err, userResult, fields) {
+                            if (err) reject(err);
+                            else if (userResult.length > 0) {
+                                let userId = [];
+                                userResult.forEach((element) => {
+                                    userId.push(element.userId);
+                                });
+
+                                connection.query(
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                    [userId],
+                                    function (err, results, fields) {
+                                        if (err) {
+                                            reject(err);
+                                        }
+                                        if (results.length > 0) {
+                                            responseData = checkDuplicateResponse(
+                                                results,
+                                                responseData
+                                            );
+                                        }
+
+                                        resolve();
+                                    }
+                                );
+                            } else {
+                                resolve();
+                            }
+                        }
+                    );
+                })
+            );
+        }
+    }
+
+    if ("graduation" in req.body || "postGraduation" in req.body) {
+        promises.push(
+            new Promise((resolve, reject) => {
                 connection.query(
-                    "SELECT `userId` FROM `user_kundali_details_master` WHERE manglik = ?",
-                    [req.body.mangalik],
+                    'SELECT `userId` FROM `user_educational_details_master` WHERE (educationType="grad" OR educationType="postGrad") AND ((qualification = ? OR stream = ?) OR (qualification = ?))',
+                    [req.body.graduation, req.body.stream, req.body.postGraduation],
                     function (err, userResult, fields) {
-                        if (err)
-                            reject(err);
+                        if (err) reject(err);
                         else if (userResult.length > 0) {
                             let userId = [];
                             userResult.forEach((element) => {
@@ -1302,7 +1399,10 @@ async function executeQueries(req, res) {
                                         reject(err);
                                     }
                                     if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(results, responseData);
+                                        responseData = checkDuplicateResponse(
+                                            results,
+                                            responseData
+                                        );
                                     }
 
                                     resolve();
@@ -1313,226 +1413,210 @@ async function executeQueries(req, res) {
                         }
                     }
                 );
-            }));
-        }
-    }
-
-    if ("graduation" in req.body || "postGraduation" in req.body) {
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(
-                'SELECT `userId` FROM `user_educational_details_master` WHERE (educationType="grad" OR educationType="postGrad") AND ((qualification = ? OR stream = ?) OR (qualification = ?))',
-                [req.body.graduation, req.body.stream, req.body.postGraduation],
-                function (err, userResult, fields) {
-                    if (err)
-                        reject(err);
-                    else if (userResult.length > 0) {
-                        let userId = [];
-                        userResult.forEach((element) => {
-                            userId.push(element.userId);
-                        });
-
-                        connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                            [userId],
-                            function (err, results, fields) {
-                                if (err) {
-                                    reject(err);
-                                }
-                                if (results.length > 0) {
-                                    responseData = checkDuplicateResponse(results, responseData);
-                                }
-
-                                resolve();
-                            }
-                        );
-                    } else {
-                        resolve();
-                    }
-                }
-            );
-        }));
+            })
+        );
     }
 
     if ("income" in req.body) {
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(
-                "SELECT `userId` FROM `user_professional_details_master` WHERE incomeRange = ?",
-                [req.body.income],
-                function (err, userResult, fields) {
-                    if (err)
-                        reject(err);
-                    else if (userResult.length > 0) {
-                        let userId = [];
-                        userResult.forEach((element) => {
-                            userId.push(element.userId);
-                        });
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(
+                    "SELECT `userId` FROM `user_professional_details_master` WHERE incomeRange = ?",
+                    [req.body.income],
+                    function (err, userResult, fields) {
+                        if (err) reject(err);
+                        else if (userResult.length > 0) {
+                            let userId = [];
+                            userResult.forEach((element) => {
+                                userId.push(element.userId);
+                            });
 
-                        connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                            [userId],
-                            function (err, results, fields) {
-                                if (err) {
-                                    reject(err);
+                            connection.query(
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                [userId],
+                                function (err, results, fields) {
+                                    if (err) {
+                                        reject(err);
+                                    }
+                                    if (results.length > 0) {
+                                        responseData = checkDuplicateResponse(
+                                            results,
+                                            responseData
+                                        );
+                                    }
+                                    resolve();
                                 }
-                                if (results.length > 0) {
-                                    responseData = checkDuplicateResponse(results, responseData);
-                                }
-                                resolve();
-                            }
-                        );
-                    } else {
-                        resolve();
+                            );
+                        } else {
+                            resolve();
+                        }
                     }
-                }
-            );
-        }));
+                );
+            })
+        );
     }
 
     if ("houseType" in req.body) {
         let h = req.body.houseType == "Owned" ? "1" : "2";
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(
-                "SELECT `userId` FROM `user_additional_details_master` WHERE houseType = ?",
-                [h],
-                function (err, userResult, fields) {
-                    if (err)
-                        reject(err);
-                    else if (userResult.length > 0) {
-                        let userId = [];
-                        userResult.forEach((element) => {
-                            userId.push(element.userId);
-                        });
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(
+                    "SELECT `userId` FROM `user_additional_details_master` WHERE houseType = ?",
+                    [h],
+                    function (err, userResult, fields) {
+                        if (err) reject(err);
+                        else if (userResult.length > 0) {
+                            let userId = [];
+                            userResult.forEach((element) => {
+                                userId.push(element.userId);
+                            });
 
-                        connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                            [userId],
-                            function (err, results, fields) {
-                                if (err) {
-                                    reject(err);
+                            connection.query(
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                [userId],
+                                function (err, results, fields) {
+                                    if (err) {
+                                        reject(err);
+                                    }
+                                    if (results.length > 0) {
+                                        responseData = checkDuplicateResponse(
+                                            results,
+                                            responseData
+                                        );
+                                    }
+                                    resolve();
                                 }
-                                if (results.length > 0) {
-                                    responseData = checkDuplicateResponse(results, responseData);
-                                }
-                                resolve();
-                            }
-                        );
-                    } else {
-                        resolve();
+                            );
+                        } else {
+                            resolve();
+                        }
                     }
-                }
-            );
-        }));
+                );
+            })
+        );
     }
 
     if ("dietType" in req.body) {
         let h = req.body.dietType == "Non Vegetarian" ? "Non-Veg" : "Veg";
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(
-                "SELECT `userId` FROM `user_additional_details_master` WHERE foodType = ?",
-                [h],
-                function (err, userResult, fields) {
-                    if (err)
-                        reject(err);
-                    else if (userResult.length > 0) {
-                        let userId = [];
-                        userResult.forEach((element) => {
-                            userId.push(element.userId);
-                        });
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(
+                    "SELECT `userId` FROM `user_additional_details_master` WHERE foodType = ?",
+                    [h],
+                    function (err, userResult, fields) {
+                        if (err) reject(err);
+                        else if (userResult.length > 0) {
+                            let userId = [];
+                            userResult.forEach((element) => {
+                                userId.push(element.userId);
+                            });
 
-                        connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                            [userId],
-                            function (err, results, fields) {
-                                if (err) {
-                                    reject(err);
+                            connection.query(
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                [userId],
+                                function (err, results, fields) {
+                                    if (err) {
+                                        reject(err);
+                                    }
+                                    if (results.length > 0) {
+                                        responseData = checkDuplicateResponse(
+                                            results,
+                                            responseData
+                                        );
+                                    }
+                                    resolve();
                                 }
-                                if (results.length > 0) {
-                                    responseData = checkDuplicateResponse(results, responseData);
-                                }
-                                resolve();
-                            }
-                        );
-                    } else {
-                        resolve();
+                            );
+                        } else {
+                            resolve();
+                        }
                     }
-                }
-            );
-        }));
+                );
+            })
+        );
     }
 
     if ("alcoholic" in req.body || "smoking" in req.body) {
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(
-                "SELECT `userId` FROM `user_medical_details_master` WHERE (alcoholic = ? OR smoking = ? )",
-                [req.body.alcoholic, req.body.smoking],
-                function (err, userResult, fields) {
-                    if (err)
-                        reject(err);
-                    else if (userResult.length > 0) {
-                        let userId = [];
-                        userResult.forEach((element) => {
-                            userId.push(element.userId);
-                        });
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(
+                    "SELECT `userId` FROM `user_medical_details_master` WHERE (alcoholic = ? OR smoking = ? )",
+                    [req.body.alcoholic, req.body.smoking],
+                    function (err, userResult, fields) {
+                        if (err) reject(err);
+                        else if (userResult.length > 0) {
+                            let userId = [];
+                            userResult.forEach((element) => {
+                                userId.push(element.userId);
+                            });
 
-                        connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                            [userId],
-                            function (err, results, fields) {
-                                if (err) {
-                                    reject(err);
+                            connection.query(
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                [userId],
+                                function (err, results, fields) {
+                                    if (err) {
+                                        reject(err);
+                                    }
+                                    if (results.length > 0) {
+                                        responseData = checkDuplicateResponse(
+                                            results,
+                                            responseData
+                                        );
+                                    }
+                                    resolve();
                                 }
-                                if (results.length > 0) {
-                                    responseData = checkDuplicateResponse(results, responseData);
-                                }
-                                resolve();
-                            }
-                        );
-                    } else {
-                        resolve();
+                            );
+                        } else {
+                            resolve();
+                        }
                     }
-                }
-            );
-        }));
+                );
+            })
+        );
     }
 
     if ("medical" in req.body) {
         let m = req.body.medical.split(",");
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(
-                "SELECT `userId` FROM `user_medical_details_master` WHERE medicalHistory IN (?)",
-                [m],
-                function (err, userResult, fields) {
-                    if (err)
-                        reject(err);
-                    else if (userResult.length > 0) {
-                        let userId = [];
-                        userResult.forEach((element) => {
-                            userId.push(element.userId);
-                        });
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(
+                    "SELECT `userId` FROM `user_medical_details_master` WHERE medicalHistory IN (?)",
+                    [m],
+                    function (err, userResult, fields) {
+                        if (err) reject(err);
+                        else if (userResult.length > 0) {
+                            let userId = [];
+                            userResult.forEach((element) => {
+                                userId.push(element.userId);
+                            });
 
-                        connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                            [userId],
-                            function (err, results, fields) {
-                                if (err) {
-                                    reject(err);
-                                }
-                                if (results.length > 0) {
-                                    responseData = checkDuplicateResponse(results, responseData);
-                                }
+                            connection.query(
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                                [userId],
+                                function (err, results, fields) {
+                                    if (err) {
+                                        reject(err);
+                                    }
+                                    if (results.length > 0) {
+                                        responseData = checkDuplicateResponse(
+                                            results,
+                                            responseData
+                                        );
+                                    }
 
-                                resolve();
-                            }
-                        );
-                    } else {
-                        resolve();
+                                    resolve();
+                                }
+                            );
+                        } else {
+                            resolve();
+                        }
                     }
-                }
-            );
-        }));
+                );
+            })
+        );
     }
 
     try {
@@ -1555,7 +1639,8 @@ async function executeUpdateQueries(req, res, user) {
     if ("basicDetails" in user) {
         var basicDetails = user.basicDetails;
 
-        var sql = "UPDATE `user_basic_details_master` SET  height=?, weight=?, bodyTone=?, placeOfBirth=?, timeOfBirth=?, dateOfBirth=?, updatedBy=? WHERE userid=?";
+        var sql =
+            "UPDATE `user_basic_details_master` SET  height=?, weight=?, bodyTone=?, placeOfBirth=?, timeOfBirth=?, dateOfBirth=?, updatedBy=? WHERE userid=?";
         var values = [
             basicDetails.height,
             basicDetails.weight,
@@ -1567,19 +1652,20 @@ async function executeUpdateQueries(req, res, user) {
             basicDetails.userId,
         ];
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(sql, values, function (err, result) {
-                if (err) reject(err);
-                else {
-                    console.log("Number of records updated: " + result.affectedRows);
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(sql, values, function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        console.log("Number of records updated: " + result.affectedRows);
 
-                    basicDetails.id = result.insertId;
-                    response.basicDetails = basicDetails;
-                }
-                resolve();
-            });
-        }));
-
+                        basicDetails.id = result.insertId;
+                        response.basicDetails = basicDetails;
+                    }
+                    resolve();
+                });
+            })
+        );
     }
 
     if ("additionalDetails" in user) {
@@ -1596,18 +1682,20 @@ async function executeUpdateQueries(req, res, user) {
             additionalDetails.userId,
         ];
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(sql, values, function (err, result) {
-                if (err) reject(err);
-                else {
-                    console.log("Number of records updated: " + result.affectedRows);
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(sql, values, function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        console.log("Number of records updated: " + result.affectedRows);
 
-                    additionalDetails.id = result.insertId;
-                    response.additionalDetails = additionalDetails;
-                }
-                resolve();
-            });
-        }));
+                        additionalDetails.id = result.insertId;
+                        response.additionalDetails = additionalDetails;
+                    }
+                    resolve();
+                });
+            })
+        );
     }
 
     if ("addressDetails" in user) {
@@ -1627,18 +1715,20 @@ async function executeUpdateQueries(req, res, user) {
             addressDetails.userId,
         ];
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(sql, values, function (err, result) {
-                if (err) reject(err);
-                else {
-                    console.log("Number of records updated: " + result.affectedRows);
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(sql, values, function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        console.log("Number of records updated: " + result.affectedRows);
 
-                    addressDetails.id = result.insertId;
-                    response.addressDetails = addressDetails;
-                }
-                resolve();
-            });
-        }));
+                        addressDetails.id = result.insertId;
+                        response.addressDetails = addressDetails;
+                    }
+                    resolve();
+                });
+            })
+        );
     }
 
     if ("educationalDetails" in user) {
@@ -1654,18 +1744,20 @@ async function executeUpdateQueries(req, res, user) {
             educationalDetails.userId,
         ];
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(sql, values, function (err, result) {
-                if (err) reject(err);
-                else {
-                    console.log("Number of records updated: " + result.affectedRows);
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(sql, values, function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        console.log("Number of records updated: " + result.affectedRows);
 
-                    educationalDetails.id = result.insertId;
-                    response.educationalDetails = educationalDetails;
-                }
-                resolve();
-            });
-        }));
+                        educationalDetails.id = result.insertId;
+                        response.educationalDetails = educationalDetails;
+                    }
+                    resolve();
+                });
+            })
+        );
     }
 
     if ("kundaliDetails" in user) {
@@ -1686,18 +1778,20 @@ async function executeUpdateQueries(req, res, user) {
             kundaliDetails.userId,
         ];
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(sql, values, function (err, result) {
-                if (err) reject(err);
-                else {
-                    console.log("Number of records inserted: " + result.affectedRows);
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(sql, values, function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        console.log("Number of records inserted: " + result.affectedRows);
 
-                    kundaliDetails.id = result.insertId;
-                    response.kundaliDetails = kundaliDetails;
-                }
-                resolve();
-            });
-        }));
+                        kundaliDetails.id = result.insertId;
+                        response.kundaliDetails = kundaliDetails;
+                    }
+                    resolve();
+                });
+            })
+        );
     }
 
     if ("medicalDetails" in user) {
@@ -1714,18 +1808,20 @@ async function executeUpdateQueries(req, res, user) {
             medicalDetails.userId,
         ];
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(sql, values, function (err, result) {
-                if (err) reject(err);
-                else {
-                    console.log("Number of records inserted: " + result.affectedRows);
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(sql, values, function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        console.log("Number of records inserted: " + result.affectedRows);
 
-                    medicalDetails.id = result.insertId;
-                    response.medicalDetails = medicalDetails;
-                }
-                resolve();
-            });
-        }));
+                        medicalDetails.id = result.insertId;
+                        response.medicalDetails = medicalDetails;
+                    }
+                    resolve();
+                });
+            })
+        );
     }
 
     if ("personalDetails" in user) {
@@ -1746,18 +1842,20 @@ async function executeUpdateQueries(req, res, user) {
             personalDetails.userId,
         ];
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(sql, values, function (err, result) {
-                if (err) reject(err);
-                else {
-                    console.log("Number of records inserted: " + result.affectedRows);
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(sql, values, function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        console.log("Number of records inserted: " + result.affectedRows);
 
-                    personalDetails.id = result.insertId;
-                    response.personalDetails = personalDetails;
-                }
-                resolve();
-            });
-        }));
+                        personalDetails.id = result.insertId;
+                        response.personalDetails = personalDetails;
+                    }
+                    resolve();
+                });
+            })
+        );
     }
 
     if ("personalDocumentDetails" in user) {
@@ -1772,18 +1870,20 @@ async function executeUpdateQueries(req, res, user) {
             personalDocument.userId,
         ];
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(sql, values, function (err, result) {
-                if (err) reject(err);
-                else {
-                    console.log("Number of records inserted: " + result.affectedRows);
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(sql, values, function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        console.log("Number of records inserted: " + result.affectedRows);
 
-                    personalDocument.id = result.insertId;
-                    response.personalDocument = personalDocument;
-                }
-                resolve();
-            });
-        }));
+                        personalDocument.id = result.insertId;
+                        response.personalDocument = personalDocument;
+                    }
+                    resolve();
+                });
+            })
+        );
     }
 
     if ("professionalDetails" in user) {
@@ -1799,18 +1899,23 @@ async function executeUpdateQueries(req, res, user) {
             professionalDetails.userId,
         ];
 
-        promises.push(new Promise((resolve, reject) => {
-            connection.query(sql, values, function (err, result) {
-                if (err) reject(err);
-                else {
-                    console.log("Number of records updated in professional: " + result.affectedRows);
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(sql, values, function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        console.log(
+                            "Number of records updated in professional: " +
+                            result.affectedRows
+                        );
 
-                    professionalDetails.id = result.insertId;
-                    response.professionalDetails = professionalDetails;
-                }
-                resolve();
-            });
-        }));
+                        professionalDetails.id = result.insertId;
+                        response.professionalDetails = professionalDetails;
+                    }
+                    resolve();
+                });
+            })
+        );
     }
 
     try {
@@ -1821,8 +1926,7 @@ async function executeUpdateQueries(req, res, user) {
                 success: true,
                 data: user,
             });
-        }
-        else
+        } else
             res.status(200).json({
                 success: false,
                 status: "Nothing to update",
@@ -1839,135 +1943,201 @@ async function executeUpdateQueries(req, res, user) {
 async function getProfileData(req, res, responseData, userId) {
     const promises = [];
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM `user_basic_details_master` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records fetched from basic: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM `user_basic_details_master` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log(
+                            "Number of records fetched from basic: " + result.length
+                        );
 
-                responseData.basicDetails = result[0];
-            }
+                        responseData.basicDetails = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM user_additional_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records from additional: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_additional_details_master `users` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log("Number of records from additional: " + result.length);
 
-                responseData.additionalDetails = result[0];
-            }
+                        responseData.additionalDetails = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM user_address_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records from address: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_address_details_master `users` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log("Number of records from address: " + result.length);
 
-                responseData.addressDetails = result[0];
-            }
+                        responseData.addressDetails = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM user_document_details_master WHERE enabled='1' AND docType='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records from educational: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_document_details_master WHERE enabled='1' AND docType='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log("Number of records from educational: " + result.length);
 
-                responseData.educationalDetails = result[0];
-            }
+                        responseData.educationalDetails = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM user_educational_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records from educational: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_educational_details_master `users` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log("Number of records from educational: " + result.length);
 
-                responseData.educationalDetails = result[0];
-            }
+                        responseData.educationalDetails = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM user_kundali_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records from kundali: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_kundali_details_master `users` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log("Number of records from kundali: " + result.length);
 
-                responseData.kundaliDetails = result[0];
-            }
+                        responseData.kundaliDetails = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM user_medical_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records from medical: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_medical_details_master `users` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log("Number of records from medical: " + result.length);
 
-                responseData.medicalDetails = result[0];
-            }
+                        responseData.medicalDetails = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM user_personal_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records personal: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_personal_details_master `users` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log("Number of records personal: " + result.length);
 
-                responseData.personalDetails = result[0];
-            }
+                        responseData.personalDetails = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM user_personal_document_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records from personal documents: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_personal_document_master `users` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log(
+                            "Number of records from personal documents: " + result.length
+                        );
 
-                responseData.personalDocument = result[0];
-            }
+                        responseData.personalDocument = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
-    promises.push(new Promise((resolve, reject) => {
-        connection.query("SELECT * FROM user_professional_details_master `users` WHERE enabled='1' AND userId=?", [userId], function (err, result) {
-            if (err) reject(err);
-            else if (result.length > 0) {
-                console.log("Number of records from professional: " + result.length);
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_professional_details_master `users` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log(
+                            "Number of records from professional: " + result.length
+                        );
 
-                responseData.professionalDetails = result[0];
-            }
+                        responseData.professionalDetails = result[0];
+                    }
 
-            resolve();
-        });
-    }));
+                    resolve();
+                }
+            );
+        })
+    );
 
     try {
         await Promise.all(promises);
