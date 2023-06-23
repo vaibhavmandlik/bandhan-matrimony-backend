@@ -39,6 +39,13 @@ router.get('/delete', function (req, res, next) {
     'UPDATE `users` SET enabled="0" WHERE id=' + id,
     function (err, results, fields) {
       console.log(results);
+      if (err)
+        return res
+          .status(200)
+          .json({
+            success: false,
+            error: "Something went wrong: " + err,
+          })
 
       if (results.affectedRows == 1) {
         res
