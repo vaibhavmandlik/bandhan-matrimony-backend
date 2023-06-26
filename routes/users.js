@@ -207,7 +207,7 @@ router.post('/resetPassword', function (req, res, next) {
     if (result.length > 0) {
       var sql = 'UPDATE `users` SET  password=? WHERE email=?';
       var values = [user.password, user.email];
-  
+
       connection.query(sql, values, function (err, result) {
         if (err) {
           return res
@@ -218,7 +218,7 @@ router.post('/resetPassword', function (req, res, next) {
             });
         };
         console.log("Number of records inserted: " + result.affectedRows);
-  
+
         res
           .status(200)
           .json({
@@ -227,13 +227,91 @@ router.post('/resetPassword', function (req, res, next) {
           });
       });
     }
-    else{
+    else {
       return res
-            .status(200)
+        .status(200)
+        .json({
+          success: true,
+          message: "Not found an aaccount with email " + user.email
+        });
+    }
+  });
+
+});
+
+router.get('/registerToken', function (req, res, next) {
+  let token = req.query.token;
+  console.log(token);
+
+  var sql = 'INSERT INTO user_fcm_token_master (token) VALUES (?)';
+  var values = [token];
+
+  connection.query(sql, values, function (err, result) {
+    if (err) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          status: err.message,
+        });
+    };
+    console.log("Number of records inserted in FCM: " + result.affectedRows);
+
+    res
+      .status(200)
+      .json({
+        success: true,
+        data: result.insertId,
+      });
+  });
+
+});
+
+router.put('/updateToken', function (req, res, next) {
+  let token = req.query.tokenId;
+  let user = req.query.userId;
+
+  var sql = 'SELECT * From user_fcm_token_master WHERE id=? AND enabled="1"';
+  var values = [token];
+
+  connection.query(sql, values, function (err, tokenResult) {
+    if (err)
+      return res
+        .status(500)
+        .json({
+          success: false,
+          status: err.message,
+        });
+
+    console.log("Number of tokens found in FCM: " + tokenResult.length);
+
+    if (tokenResult.length > 0) {
+      var sql = 'UPDATE `user_fcm_token_master` SET userId=? WHERE enabled="1" AND id=?';
+      var values = [user, tokenResult[0].id];
+
+      connection.query(sql, values, function (err, result) {
+        if (err) {
+          return res
+            .status(500)
             .json({
-              success: true,
-              message: "Not found an aaccount with email "+ user.email
+              success: false,
+              status: err.message,
             });
+        };
+        console.log("Number of records updated in FCM: " + result.affectedRows);
+
+        res
+          .status(200)
+          .json({
+            success: true,
+            data: result,
+          });
+      });
+    }
+    else {
+      console.log("Registering token for user: ${user}");
+
+
     }
   });
 
