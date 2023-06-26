@@ -1,7 +1,6 @@
 const express = require("express");
-const mysql = require("mysql2");
-const path = require("path");
-const jwt = require("jsonwebtoken");
+
+var notification = require('../services/notification');
 
 var router = express.Router();
 
@@ -544,7 +543,7 @@ router.get("/shortlisted", function (req, res, next) {
             });
 
             connection.query(
-                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
+                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE (udm.enabled = '1' AND udm.docType = '1') OR (udm.enabled = '1' AND udm.docType IS NULL) AND `users`.`id` IN (?)",
                 [shortlisted],
                 function (err, results, fields) {
                     if (err) {
@@ -615,8 +614,7 @@ router.get("/interest", function (req, res, next) {
 
     const promises = [];
 
-    promises.push(
-        new Promise((resolve, reject) => {
+    promises.push(new Promise((resolve, reject) => {
             // Query for interest request sent
             connection.query(
                 'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?',
@@ -630,7 +628,7 @@ router.get("/interest", function (req, res, next) {
                         });
 
                         connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
+                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
                             [sentIds],
                             function (err, results, fields) {
                                 if (err) {
@@ -642,8 +640,10 @@ router.get("/interest", function (req, res, next) {
                                         (a) => a.interestedInId == m.id
                                     );
 
-                                    m.isAccepted = interestRequest[0].isAccepted;
-                                    m.interestId = interestRequest[0].id;
+                                    if (interestReceived.length > 0) {
+                                        m.isAccepted = interestRequest[0].isAccepted;
+                                        m.interestId = interestRequest[0].id;
+                                    }
 
                                     return m;
                                 });
@@ -672,7 +672,7 @@ router.get("/interest", function (req, res, next) {
                     });
 
                     connection.query(
-                        "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
+                        "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
                         [received],
                         function (err, results, fields) {
                             if (err) reject(err);
@@ -680,8 +680,10 @@ router.get("/interest", function (req, res, next) {
                             results.map((m) => {
                                 let interestRequest = result.filter((a) => a.userId == m.id);
 
-                                m.isAccepted = interestRequest[0].isAccepted;
-                                m.interestId = interestRequest[0].id;
+                                if (interestReceived.length > 0) {
+                                    m.isAccepted = interestRequest[0].isAccepted;
+                                    m.interestId = interestRequest[0].id;
+                                }
 
                                 return m;
                             });
@@ -782,32 +784,57 @@ router.post("/interest", function (req, res, next) {
     const user = req.body;
 
     connection.query(
-        "SELECT id FROM users WHERE userCode=?",
+        "SELECT id, firstName FROM users WHERE userCode=?",
         [user.interestedIn],
-        function (err, result) {
-            if (err) response.error = err;
+        function (err, userResult) {
+            if (err) return res.status(500).json({ success: false, status: err.message });
+            else {
+                var sql = `INSERT INTO user_interest_details_master (userId, interestedInId, createdBy, updatedBy, updatedOn) VALUES (?, ?, ?, ?, ?)`;
+                var values = [
+                    user.userId,
+                    userResult[0].id,
+                    user.userId,
+                    user.userId,
+                    new Date(),
+                ];
+                connection.query(sql, values, function (err, result) {
+                    if (err) response.error = err;
+                    else {
+                        console.log("Number of records Inserted: " + result.affectedRows);
 
-            var sql = `INSERT INTO user_interest_details_master (userId, interestedInId, createdBy, updatedBy, updatedOn) VALUES (?, ?, ?, ?, ?)`;
-            var values = [
-                user.userId,
-                result[0].id,
-                user.userId,
-                user.userId,
-                new Date(),
-            ];
-            connection.query(sql, values, function (err, result) {
-                if (err) response.error = err;
-                else {
-                    console.log("Number of records Inserted: " + result.affectedRows);
+                        user.id = result.insertId;
+                        response.user = user;
 
-                    user.id = result.insertId;
-                    response.user = user;
-                }
-                return res.status(200).json({
-                    success: true,
-                    data: response,
+                        var sql = 'SELECT token FROM user_fcm_token_master WHERE userId=? AND enabled="1"';
+                        var values = [userResult[0].id];
+
+                        connection.query(sql, values, function (err, result) {
+                            if (err) {
+                                console.log("Error getting token: ", err.message);
+                            } else {
+                                var userFCMToken = result[0].token; // Replace with the FCM token of the target device
+
+                                var message = {
+                                    notification: {
+                                        title: 'Interest recevied',
+                                        body: userResult[0].firstName + ' has sent you an interest'
+                                    },
+                                    data: {
+                                        fragment: 'InterestFragment'
+                                    },
+                                    token: userFCMToken // Use the FCM token of the target device
+                                };
+
+                                notification.send(message);
+                            }
+                        });
+                    }
+                    return res.status(200).json({
+                        success: true,
+                        data: response,
+                    });
                 });
-            });
+            }
         }
     );
 });
@@ -833,7 +860,7 @@ router.get("/matches", function (req, res, next) {
                 });
 
                 connection.query(
-                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `u`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `udm`.`enabled` = '1' AND `udm`.`docType` = '1' AND `users`.`id` IN (?)",
+                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
                     [userId],
                     function (err, results, fields) {
                         if (err) {
@@ -856,6 +883,7 @@ router.get("/matches", function (req, res, next) {
                 });
         }
     );
+
 });
 
 router.post("/filter", function (req, res, next) {
