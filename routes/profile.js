@@ -1,6 +1,6 @@
 const express = require("express");
 
-var notification = require('../services/notification');
+var notification = require("../services/notification");
 
 var router = express.Router();
 
@@ -614,7 +614,8 @@ router.get("/interest", function (req, res, next) {
 
     const promises = [];
 
-    promises.push(new Promise((resolve, reject) => {
+    promises.push(
+        new Promise((resolve, reject) => {
             // Query for interest request sent
             connection.query(
                 'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?',
@@ -658,46 +659,47 @@ router.get("/interest", function (req, res, next) {
         })
     );
 
-    promises.push(new Promise((resolve, reject) => {
-        // Query for interest request received
-        connection.query(
-            'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?',
-            [user],
-            function (err, result, fields) {
-                if (err) reject(err);
-                else if (result.length > 0) {
-                    let received = [];
-                    result.forEach((element) => {
-                        received.push(element.userId);
-                    });
+    promises.push(
+        new Promise((resolve, reject) => {
+            // Query for interest request received
+            connection.query(
+                'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?',
+                [user],
+                function (err, result, fields) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        let received = [];
+                        result.forEach((element) => {
+                            received.push(element.userId);
+                        });
 
-                    connection.query(
-                        "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
-                        [received],
-                        function (err, results, fields) {
-                            if (err) reject(err);
+                        connection.query(
+                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` WHERE `users`.`id` IN (?)",
+                            [received],
+                            function (err, results, fields) {
+                                if (err) reject(err);
 
-                            results.map((m) => {
-                                let interestRequest = result.filter((a) => a.userId == m.id);
+                                results.map((m) => {
+                                    let interestRequest = result.filter((a) => a.userId == m.id);
 
-                                if (interestReceived.length > 0) {
-                                    m.isAccepted = interestRequest[0].isAccepted;
-                                    m.interestId = interestRequest[0].id;
-                                }
+                                    if (interestReceived.length > 0) {
+                                        m.isAccepted = interestRequest[0].isAccepted;
+                                        m.interestId = interestRequest[0].id;
+                                    }
 
-                                return m;
-                            });
+                                    return m;
+                                });
 
-                            interestReceived = results;
+                                interestReceived = results;
 
-                            resolve();
-                        }
-                    );
-                } else
-                    resolve();
-            }
-        );
-    }));
+                                resolve();
+                            }
+                        );
+                    } else resolve();
+                }
+            );
+        })
+    );
 
     Promise.all(promises)
         .then(() => {
@@ -720,30 +722,66 @@ router.get("/interest", function (req, res, next) {
 router.put("/interest", function (req, res, next) {
     var id = req.body.id;
     var action = req.body.action;
-    var sql = "SELECT `id` FROM `user_interest_details_master` WHERE `id`=?";
+    var sql = "SELECT * FROM `user_interest_details_master` WHERE `id`=?";
     var values = [id];
 
-    connection.query(sql, values, function (err, result) {
+    connection.query(sql, values, function (err, interestResult) {
         if (err) response.error = err;
-        else if (result.length == 0) {
-            console.log("Id not found");
+        else if (interestResult.length == 0) {
+            console.log("profile/interest -> PUT -> Id not found");
             return res.status(400).json({
                 success: false,
                 message: "Id Not Found",
             });
-        } else if (result.length > 0) {
+        } else if (interestResult.length == 1) {
             var sql =
                 "UPDATE `user_interest_details_master` SET  isAccepted=? WHERE id=?";
             var values = [action, id];
 
-            connection.query(sql, values, function (err, result) {
+            connection.query(sql, values, function (err, updateResult) {
                 if (err) response.error = err;
                 else {
-                    console.log("Number of records updated: " + result.affectedRows);
+                    console.log(
+                        "Number of records updated: " + updateResult.affectedRows
+                    );
+
+                    if (action == "1") {
+                        var sql =
+                            'SELECT token FROM user_fcm_token_master AND enabled="1"';
+                        var values = [interestResult[0].interestedInId];
+
+                        connection.query(sql, values, function (err, tokenResult) {
+                            if (err) {
+                                console.log("Error getting token: ", err.message);
+                            } else if (tokenResult.length > 0) {
+                                var userFCMToken = tokenResult[0].token; // Replace with the FCM token of the target device
+
+                                var message = {
+                                    notification: {
+                                        title: "Interest accepted",
+                                        body:
+                                            "Interest you sent has been accepted",
+                                    },
+                                    data: {
+                                        fragment: "HomeFragment",
+                                    },
+                                    token: userFCMToken, // Use the FCM token of the target device
+                                };
+
+                                notification.send(message);
+                            }
+                        });
+                    }
+
                     return res.status(200).json({
                         success: true,
                     });
                 }
+            });
+        } else {
+            return res.status(500).json({
+                success: false,
+                status: "Can't validate interest response",
             });
         }
     });
@@ -787,7 +825,8 @@ router.post("/interest", function (req, res, next) {
         "SELECT id, firstName FROM users WHERE userCode=?",
         [user.interestedIn],
         function (err, userResult) {
-            if (err) return res.status(500).json({ success: false, status: err.message });
+            if (err)
+                return res.status(500).json({ success: false, status: err.message });
             else {
                 var sql = `INSERT INTO user_interest_details_master (userId, interestedInId, createdBy, updatedBy, updatedOn) VALUES (?, ?, ?, ?, ?)`;
                 var values = [
@@ -805,7 +844,8 @@ router.post("/interest", function (req, res, next) {
                         user.id = result.insertId;
                         response.user = user;
 
-                        var sql = 'SELECT token FROM user_fcm_token_master WHERE userId=? AND enabled="1"';
+                        var sql =
+                            'SELECT token FROM user_fcm_token_master WHERE userId=? AND enabled="1"';
                         var values = [userResult[0].id];
 
                         connection.query(sql, values, function (err, result) {
@@ -816,13 +856,13 @@ router.post("/interest", function (req, res, next) {
 
                                 var message = {
                                     notification: {
-                                        title: 'Interest recevied',
-                                        body: userResult[0].firstName + ' has sent you an interest'
+                                        title: "Interest recevied",
+                                        body: userResult[0].firstName + " has sent you an interest",
                                     },
                                     data: {
-                                        fragment: 'InterestFragment'
+                                        fragment: "InterestFragment",
                                     },
-                                    token: userFCMToken // Use the FCM token of the target device
+                                    token: userFCMToken, // Use the FCM token of the target device
                                 };
 
                                 notification.send(message);
@@ -883,7 +923,6 @@ router.get("/matches", function (req, res, next) {
                 });
         }
     );
-
 });
 
 router.post("/filter", function (req, res, next) {
@@ -1855,7 +1894,7 @@ async function executeUpdateQueries(req, res, user) {
     if ("personalDetails" in user) {
         var personalDetails = user.personalDetails;
         var sql =
-            "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy='?', bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
+            "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
         var values = [
             personalDetails.gender,
             personalDetails.primaryPhoneNumber,
@@ -1960,7 +1999,7 @@ async function executeUpdateQueries(req, res, user) {
                 status: "Nothing to update",
             });
     } catch (err) {
-        console.log("Profile/Put: Returning error result");
+        console.log("Profile/Put: Returning error result, " + err);
         res.status(400).json({
             success: false,
             status: err.message,
