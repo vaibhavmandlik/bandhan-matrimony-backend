@@ -1855,7 +1855,7 @@ async function executeUpdateQueries(req, res, user) {
     if ("personalDetails" in user) {
         var personalDetails = user.personalDetails;
         var sql =
-            "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy='?', bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
+            "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
         var values = [
             personalDetails.gender,
             personalDetails.primaryPhoneNumber,
@@ -1960,7 +1960,7 @@ async function executeUpdateQueries(req, res, user) {
                 status: "Nothing to update",
             });
     } catch (err) {
-        console.log("Profile/Put: Returning error result");
+        console.log("Profile/Put: Returning error result, " + err);
         res.status(400).json({
             success: false,
             status: err.message,
