@@ -741,34 +741,40 @@ router.put("/interest", function (req, res, next) {
             connection.query(sql, values, function (err, updateResult) {
                 if (err) response.error = err;
                 else {
-                    console.log(
-                        "Number of records updated: " + updateResult.affectedRows
-                    );
+                    console.log("Number of records updated: " + updateResult.affectedRows);
 
                     if (action == "1") {
-                        var sql =
-                            'SELECT token FROM user_fcm_token_master AND enabled="1"';
-                        var values = [interestResult[0].interestedInId];
+                        var sql = 'SELECT firstName FROM users WHERE id=? AND enabled="1"';
+                        var values = [interestResult[0].userId];
 
-                        connection.query(sql, values, function (err, tokenResult) {
+                        connection.query(sql, values, function (err, userResult) {
                             if (err) {
-                                console.log("Error getting token: ", err.message);
-                            } else if (tokenResult.length > 0) {
-                                var userFCMToken = tokenResult[0].token; // Replace with the FCM token of the target device
+                                console.log("Error getting user in profile/interest -> PUT: ", err.message);
+                            } else if (userResult.length > 0) {
+                                var sql =
+                                    'SELECT token FROM user_fcm_token_master WHERE userId=? AND enabled="1"';
+                                var values = [interestResult[0].interestedInId];
 
-                                var message = {
-                                    notification: {
-                                        title: "Interest accepted",
-                                        body:
-                                            "Interest you sent has been accepted",
-                                    },
-                                    data: {
-                                        fragment: "HomeFragment",
-                                    },
-                                    token: userFCMToken, // Use the FCM token of the target device
-                                };
+                                connection.query(sql, values, function (err, tokenResult) {
+                                    if (err) {
+                                        console.log("Error getting token in chat: ", err.message);
+                                    } else if (tokenResult.length > 0) {
+                                        var userFCMToken = tokenResult[0].token; // Replace with the FCM token of the target device
 
-                                notification.send(message);
+                                        var message = {
+                                            notification: {
+                                                title: "Interest accepted",
+                                                body: userResult[0].firstName + " has accepted your interest request",
+                                            },
+                                            data: {
+                                                fragment: "HomeFragment"
+                                            },
+                                            token: userFCMToken, // Use the FCM token of the target device
+                                        };
+
+                                        notification.send(message);
+                                    }
+                                });
                             }
                         });
                     }
@@ -822,7 +828,7 @@ router.post("/interest", function (req, res, next) {
     const user = req.body;
 
     connection.query(
-        "SELECT id, firstName FROM users WHERE userCode=?",
+        "SELECT id FROM users WHERE userCode=?",
         [user.interestedIn],
         function (err, userResult) {
             if (err)
@@ -844,28 +850,37 @@ router.post("/interest", function (req, res, next) {
                         user.id = result.insertId;
                         response.user = user;
 
-                        var sql =
-                            'SELECT token FROM user_fcm_token_master WHERE userId=? AND enabled="1"';
-                        var values = [userResult[0].id];
+                        var sql = 'SELECT firstName FROM users WHERE id=? AND enabled="1"';
+                        var values = [user.userId];
 
-                        connection.query(sql, values, function (err, result) {
+                        connection.query(sql, values, function (err, senderResult) {
                             if (err) {
-                                console.log("Error getting token: ", err.message);
-                            } else {
-                                var userFCMToken = result[0].token; // Replace with the FCM token of the target device
+                                console.log("Error getting user in profile/interest -> POST: ", err.message);
+                            } else if (senderResult.length > 0) {
+                                var sql =
+                                    'SELECT token FROM user_fcm_token_master WHERE userId=? AND enabled="1"';
+                                var values = [userResult[0].id];
 
-                                var message = {
-                                    notification: {
-                                        title: "Interest recevied",
-                                        body: userResult[0].firstName + " has sent you an interest",
-                                    },
-                                    data: {
-                                        fragment: "InterestFragment",
-                                    },
-                                    token: userFCMToken, // Use the FCM token of the target device
-                                };
+                                connection.query(sql, values, function (err, result) {
+                                    if (err) {
+                                        console.log("Error getting token: ", err.message);
+                                    } else if (result.length == 1) {
+                                        var userFCMToken = result[0].token; // Replace with the FCM token of the target device
 
-                                notification.send(message);
+                                        var message = {
+                                            notification: {
+                                                title: "Interest received",
+                                                body: senderResult[0].firstName + " has sent you an interest",
+                                            },
+                                            data: {
+                                                fragment: "InterestFragment",
+                                            },
+                                            token: userFCMToken, // Use the FCM token of the target device
+                                        };
+
+                                        notification.send(message);
+                                    }
+                                });
                             }
                         });
                     }
