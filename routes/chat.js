@@ -1,6 +1,7 @@
 var express = require("express");
 var connection = require("./connection");
 var router = express.Router();
+var notification = require("../services/notification");
 
 router.post("/", function (req, res, next) {
   const user = req.body;
@@ -14,7 +15,9 @@ router.post("/", function (req, res, next) {
         status: err.message,
       });
     } else {
-      console.log("Number of records inserted in chat master: " + chatResult.affectedRows);
+      console.log(
+        "Number of records inserted in chat master: " + chatResult.affectedRows
+      );
 
       user.id = chatResult.insertId;
       // response.user = user;
@@ -44,7 +47,7 @@ router.post("/", function (req, res, next) {
                   },
                   data: {
                     fragment: "ChatFragment",
-                    userId: user.userId
+                    userId: user.userId.toString(),
                   },
                   token: userFCMToken, // Use the FCM token of the target device
                 };
