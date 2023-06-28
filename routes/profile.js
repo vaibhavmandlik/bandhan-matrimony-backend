@@ -618,7 +618,7 @@ router.get("/interest", function (req, res, next) {
         new Promise((resolve, reject) => {
             // Query for interest request sent
             connection.query(
-                'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `userId`=?',
+                'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND isAccepted="0" AND `userId`=?',
                 [user],
                 function (err, result, fields) {
                     if (err) reject(err);
@@ -641,7 +641,7 @@ router.get("/interest", function (req, res, next) {
                                         (a) => a.interestedInId == m.id
                                     );
 
-                                    if (interestReceived.length > 0) {
+                                    if (interestRequest.length > 0) {
                                         m.isAccepted = interestRequest[0].isAccepted;
                                         m.interestId = interestRequest[0].id;
                                     }
@@ -663,14 +663,15 @@ router.get("/interest", function (req, res, next) {
         new Promise((resolve, reject) => {
             // Query for interest request received
             connection.query(
-                'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND `interestedInId`=?',
+                'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND isAccepted="0"  AND `interestedInId`=? GROUP BY userId',
                 [user],
                 function (err, result, fields) {
                     if (err) reject(err);
                     else if (result.length > 0) {
                         let received = [];
                         result.forEach((element) => {
-                            received.push(element.userId);
+                            if (!received.includes(element.userId))
+                                received.push(element.userId);
                         });
 
                         connection.query(
@@ -682,7 +683,7 @@ router.get("/interest", function (req, res, next) {
                                 results.map((m) => {
                                     let interestRequest = result.filter((a) => a.userId == m.id);
 
-                                    if (interestReceived.length > 0) {
+                                    if (interestRequest.length > 0) {
                                         m.isAccepted = interestRequest[0].isAccepted;
                                         m.interestId = interestRequest[0].id;
                                     }
@@ -745,7 +746,7 @@ router.put("/interest", function (req, res, next) {
 
                     if (action == "1") {
                         var sql = 'SELECT firstName FROM users WHERE id=? AND enabled="1"';
-                        var values = [interestResult[0].userId];
+                        var values = [interestResult[0].interestedInId];
 
                         connection.query(sql, values, function (err, userResult) {
                             if (err) {
@@ -753,7 +754,7 @@ router.put("/interest", function (req, res, next) {
                             } else if (userResult.length > 0) {
                                 var sql =
                                     'SELECT token FROM user_fcm_token_master WHERE userId=? AND enabled="1"';
-                                var values = [interestResult[0].interestedInId];
+                                var values = [interestResult[0].userId];
 
                                 connection.query(sql, values, function (err, tokenResult) {
                                     if (err) {

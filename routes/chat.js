@@ -71,23 +71,23 @@ router.get("/all", function (req, res, next) {
   var sql = "SELECT * FROM chat_master WHERE userid=? OR toId=?";
   var values = [user, user];
 
-  connection.query(sql, values, function (err, result) {
+  connection.query(sql, values, function (err, chatResult) {
     if (err) {
       return res.status(500).json({
         success: false,
         status: err.message,
       });
-    } else if (result.length == 0) {
+    } else if (chatResult.length == 0) {
       return res.status(200).json({
         success: true,
         data: [],
       });
     }
     let profile = [];
-    result.forEach((element, index) => {
+    chatResult.forEach((chat, index) => {
       var sql =
-        "SELECT u.id, u.firstName, u.lastName, udm.docType FROM users u LEFT JOIN user_document_details_master udm ON u.id=udm.userId WHERE u.id=?";
-      var values = [element.userId != user ? element.userId : element.toId];
+        "SELECT u.id, u.firstName, u.lastName, udm.docPath, upm.gender FROM users u LEFT OUTER JOIN user_document_details_master udm ON u.id=udm.userId AND udm.docType='1' LEFT JOIN user_personal_details_master upm ON u.id=upm.userId WHERE u.id=?";
+      var values = [chat.userId != user ? chat.userId : chat.toId];
 
       connection.query(sql, values, function (err, results) {
         if (err) {
@@ -106,7 +106,7 @@ router.get("/all", function (req, res, next) {
           if (!isPresent) profile.push(user);
         });
 
-        if (index >= result.length - 1)
+        if (index >= chatResult.length - 1)
           return res.status(200).json({
             success: true,
             data: profile,
@@ -117,9 +117,12 @@ router.get("/all", function (req, res, next) {
 });
 
 router.get("/byId", function (req, res, next) {
-  const user = req.body;
+  let user = { userId: '', toId: '' };
+  user.userId = req.query.userId;
+  user.toId = req.query.toId;
+
   var sql =
-    "SELECT message FROM chat_master WHERE (userid=? AND toId=?) OR (userid=? AND toId=?)";
+    "SELECT userId, toId, message FROM chat_master WHERE (userid=? AND toId=?) OR (userid=? AND toId=?)";
   var values = [user.userId, user.toId, user.toId, user.userId];
 
   connection.query(sql, values, function (err, result) {
@@ -129,15 +132,12 @@ router.get("/byId", function (req, res, next) {
         status: err.message,
       });
     } else {
-      console.log("Number of records fetched: " + result.length);
-
-      user.id = result.insertId;
-      // response.user = user;
+      console.log("Number of records fetched in chat: " + result.length);
+      return res.status(200).json({
+        success: true,
+        data: JSON.stringify(result),
+      });
     }
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
   });
 });
 
