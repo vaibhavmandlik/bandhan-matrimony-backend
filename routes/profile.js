@@ -481,12 +481,29 @@ router.get("/", function (req, res, next) {
                 if (result.length > 0) {
                     let userData = result[0];
 
-                    response.id = userData.id;
-                    response.userCode = userData.userCode;
-                    response.firstName = userData.firstName;
-                    response.lastName = userData.lastName;
+                    connection.query(
+                        "SELECT * FROM user_interest_details_master WHERE isAccepted='1' AND enabled='1' AND ((userId=? AND interestedInId=?) OR (userId=? AND interestedInId=?))",
+                        [userId, userData.id, userData.id, userId],
+                        function (err, interestResult) {
+                            if (err)
+                                return res.status(500).json({
+                                    success: false,
+                                    status: err.message,
+                                });
+                            else {
+                                response.id = userData.id;
+                                response.userCode = userData.userCode;
+                                response.firstName = userData.firstName;
+                                response.lastName = userData.lastName;
 
-                    getProfileData(req, res, response, userData.id);
+                                if (interestResult.length == 1)
+                                    response.isConnected = true;
+                                else
+                                    response.isConnected = false;
+
+                                getProfileData(req, res, response, userData.id, userId);
+                            }
+                        });
                 } else {
                     res.status(200).json({
                         success: false,
@@ -903,7 +920,7 @@ router.get("/matches", function (req, res, next) {
 
     // Query for interest request sent
     connection.query(
-        "SELECT DISTINCT u.id AS userId FROM users u LEFT JOIN user_block_details_master ub ON u.id = ub.blockUserId AND ub.userId = ? LEFT JOIN user_report_master ur ON u.id = ur.reportedTo AND ur.userId = ? LEFT JOIN user_interest_details_master ui ON ((u.id = ui.interestedInId AND ui.userId = ?) OR (u.id = ui.userId AND ui.interestedInId = ?)) AND isAccepted='2' LEFT JOIN user_shortlisted_details_master us ON (u.id = us.shortlistedId AND us.userId = ?) WHERE u.id <> ? AND ub.id IS NULL AND ur.id IS NULL AND ui.id IS NULL AND us.id IS NULL",
+        "SELECT DISTINCT u.id AS userId FROM users u LEFT JOIN user_block_details_master ub ON u.id = ub.blockUserId AND ub.userId = 1 LEFT JOIN user_report_master ur ON u.id = ur.reportedTo AND ur.userId = 1 LEFT JOIN user_interest_details_master ui ON (u.id = ui.interestedInId AND ui.userId = 1) OR (u.id = ui.userId AND ui.interestedInId = 1) LEFT JOIN user_shortlisted_details_master us ON (u.id = us.shortlistedId AND us.userId = 1) WHERE u.id <> 1 AND ub.id IS NULL AND ur.id IS NULL AND (ui.id IS NULL OR ui.isAccepted='2' OR ui.enabled='0') AND us.id IS NULL",
         [id, id, id, id, id, id],
         function (err, result, fields) {
             if (err)
@@ -2025,7 +2042,7 @@ async function executeUpdateQueries(req, res, user) {
     }
 }
 
-async function getProfileData(req, res, responseData, userId) {
+async function getProfileData(req, res, responseData, userId, visitorId) {
     const promises = [];
 
     promises.push(
@@ -2217,6 +2234,23 @@ async function getProfileData(req, res, responseData, userId) {
 
                         responseData.professionalDetails = result[0];
                     }
+
+                    resolve();
+                }
+            );
+        })
+    );
+
+    // Add entry to visitor table
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "INSERT INTO user_recent_visitors_details_master (userId, visitorId, createdBy) VALUES (?, ?, ?)",
+                [userId, visitorId, visitorId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0)
+                        console.log("Number of records insrted in shortlisted: " + result.length);
 
                     resolve();
                 }
