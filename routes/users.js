@@ -271,49 +271,65 @@ router.put('/updateToken', function (req, res, next) {
   let token = req.query.tokenId;
   let user = req.query.userId;
 
-  var sql = 'SELECT * From user_fcm_token_master WHERE id=? AND enabled="1"';
-  var values = [token];
+  var sql = 'UPDATE `user_fcm_token_master` SET enabled="0" WHERE userId=?';
+  var values = [user];
 
-  connection.query(sql, values, function (err, tokenResult) {
-    if (err)
+  connection.query(sql, values, function (err, result) {
+    if (err) {
       return res
         .status(500)
         .json({
           success: false,
           status: err.message,
         });
+    };
+    console.log("Number of records updated in FCM: " + result.affectedRows);
 
-    console.log("Number of tokens found in FCM: " + tokenResult.length);
+    var sql = 'SELECT * From user_fcm_token_master WHERE id=? AND enabled="1"';
+    var values = [token];
 
-    if (tokenResult.length > 0) {
-      var sql = 'UPDATE `user_fcm_token_master` SET userId=? WHERE enabled="1" AND id=?';
-      var values = [user, tokenResult[0].id];
-
-      connection.query(sql, values, function (err, result) {
-        if (err) {
-          return res
-            .status(500)
-            .json({
-              success: false,
-              status: err.message,
-            });
-        };
-        console.log("Number of records updated in FCM: " + result.affectedRows);
-
-        res
-          .status(200)
+    connection.query(sql, values, function (err, tokenResult) {
+      if (err)
+        return res
+          .status(500)
           .json({
-            success: true,
-            data: result,
+            success: false,
+            status: err.message,
           });
-      });
-    }
-    else {
-      console.log("Registering token for user: ${user}");
+
+      console.log("Number of tokens found in FCM: " + tokenResult.length);
+
+      if (tokenResult.length > 0) {
+        var sql = 'UPDATE `user_fcm_token_master` SET userId=? WHERE enabled="1" AND id=?';
+        var values = [user, tokenResult[0].id];
+
+        connection.query(sql, values, function (err, result) {
+          if (err) {
+            return res
+              .status(500)
+              .json({
+                success: false,
+                status: err.message,
+              });
+          };
+          console.log("Number of records updated in FCM: " + result.affectedRows);
+
+          res
+            .status(200)
+            .json({
+              success: true,
+              data: result,
+            });
+        });
+      }
+      else {
+        console.log("Registering token for user: ${user}");
 
 
-    }
+      }
+    });
   });
+
 
 });
 
