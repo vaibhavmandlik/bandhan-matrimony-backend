@@ -726,6 +726,8 @@ router.put("/interest", function (req, res, next) {
     var sql = "SELECT * FROM `user_interest_details_master` WHERE `id`=?";
     var values = [id];
 
+    action = action == 0 ? 2 : action;
+
     connection.query(sql, values, function (err, interestResult) {
         if (err) response.error = err;
         else if (interestResult.length == 0) {
