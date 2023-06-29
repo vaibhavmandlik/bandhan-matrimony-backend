@@ -618,7 +618,7 @@ router.get("/interest", function (req, res, next) {
         new Promise((resolve, reject) => {
             // Query for interest request sent
             connection.query(
-                'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND isAccepted="0" AND `userId`=?',
+                'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE `enabled`="1" AND `isAccepted`="0" AND `userId`=? GROUP BY `interestedInId`',
                 [user],
                 function (err, result, fields) {
                     if (err) reject(err);
@@ -663,7 +663,7 @@ router.get("/interest", function (req, res, next) {
         new Promise((resolve, reject) => {
             // Query for interest request received
             connection.query(
-                'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE enabled="1" AND isAccepted="0"  AND `interestedInId`=? GROUP BY userId',
+                'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE `enabled`="1" AND `isAccepted`="0" AND `interestedInId`=? GROUP BY `userId`',
                 [user],
                 function (err, result, fields) {
                     if (err) reject(err);
