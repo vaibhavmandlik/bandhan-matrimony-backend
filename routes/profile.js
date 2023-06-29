@@ -903,7 +903,7 @@ router.get("/matches", function (req, res, next) {
 
     // Query for interest request sent
     connection.query(
-        "SELECT DISTINCT u.id AS employee_id FROM users u LEFT JOIN user_block_details_master ub ON u.id = ub.blockUserId AND ub.userId = ? LEFT JOIN user_report_master ur ON u.id = ur.reportedTo AND ur.userId = ? LEFT JOIN user_interest_details_master ui ON (u.id = ui.interestedInId AND ui.userId = ?) OR (u.id = ui.userId AND ui.interestedInId = ?) LEFT JOIN user_shortlisted_details_master us ON (u.id = us.shortlistedId AND us.userId = ?) WHERE u.id <> ? AND ub.id IS NULL AND ur.id IS NULL AND ui.id IS NULL AND us.id IS NULL",
+        "SELECT DISTINCT u.id AS userId FROM users u LEFT JOIN user_block_details_master ub ON u.id = ub.blockUserId AND ub.userId = ? LEFT JOIN user_report_master ur ON u.id = ur.reportedTo AND ur.userId = ? LEFT JOIN user_interest_details_master ui ON ((u.id = ui.interestedInId AND ui.userId = ?) OR (u.id = ui.userId AND ui.interestedInId = ?)) AND isAccepted='2' LEFT JOIN user_shortlisted_details_master us ON (u.id = us.shortlistedId AND us.userId = ?) WHERE u.id <> ? AND ub.id IS NULL AND ur.id IS NULL AND ui.id IS NULL AND us.id IS NULL",
         [id, id, id, id, id, id],
         function (err, result, fields) {
             if (err)
@@ -914,7 +914,7 @@ router.get("/matches", function (req, res, next) {
             else if (result.length > 0) {
                 let userId = [];
                 result.forEach((element) => {
-                    userId.push(element.employee_id);
+                    userId.push(element.userId);
                 });
 
                 connection.query(
