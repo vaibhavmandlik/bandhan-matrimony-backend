@@ -7,7 +7,7 @@ var connection = require("./connection");
 
 router.post("/", async (req, res) => {
   var email = req.body.email;
-  let code = common.userCodeGenerator();
+  let code = common.userCodeGenerator('1234567890', 4);
 
   const transporter = nodemailer.createTransport({
     port: 465, // true for 465, false for other ports

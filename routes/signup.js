@@ -97,11 +97,11 @@ router.post('/', function (req, res, next) {
         isUserCodeVerified = false;
 
         while (!isUserCodeVerified) {
-          userCode = common.userCodeGenerator();
+          userCode = common.userCodeGenerator('1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 5);
           isUserCodeVerified = await verifyUserCode(userCode);
         }
 
-        let refferCode = common.userCodeGenerator();
+        let refferCode = common.userCodeGenerator('1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 5);
         var sql = `UPDATE users SET userCode=?, refferCode=?, createdBy=?, updatedBy=? WHERE id=?`;
         var values = [userCode, refferCode, result.insertId, result.insertId, result.insertId];
 

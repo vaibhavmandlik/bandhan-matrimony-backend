@@ -1,7 +1,5 @@
-function userCodeGenerator() {
-    var chars = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        serialLength = 5,
-        randomSerial = "",
+function userCodeGenerator(chars, serialLength) {
+        var randomSerial = "",
         i,
         randomNumber;
 
