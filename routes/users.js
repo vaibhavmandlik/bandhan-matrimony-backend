@@ -323,7 +323,7 @@ router.put('/updateToken', function (req, res, next) {
         });
       }
       else {
-        console.log("Registering token for user: ${user}");
+        console.log("Registering token for user: " + user);
 
 
       }
