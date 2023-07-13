@@ -853,7 +853,7 @@ router.post("/interest", function (req, res, next) {
         function (err, userResult) {
             if (err)
                 return res.status(500).json({ success: false, status: err.message });
-            else {
+            else if (userResult.length == 1) {
                 var sql = `INSERT INTO user_interest_details_master (userId, interestedInId, createdBy, updatedBy, updatedOn) VALUES (?, ?, ?, ?, ?)`;
                 var values = [
                     user.userId,
@@ -909,7 +909,11 @@ router.post("/interest", function (req, res, next) {
                         data: response,
                     });
                 });
-            }
+            } else
+                return res.status(500).json({
+                    success: false,
+                    status: "User not found",
+                });
         }
     );
 });
