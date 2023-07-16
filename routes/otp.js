@@ -13,8 +13,8 @@ router.post("/", async (req, res) => {
     port: 465, // true for 465, false for other ports
     host: "smtp.gmail.com",
     auth: {
-      user: "vaibhav.mandlik2@gmail.com",
-      pass: "wwixxvvjwhanveud",
+      user: "divyabandhan.online@gmail.com",
+      pass: "tmpikkubxqncgwrx",
     },
     secure: true,
   });
