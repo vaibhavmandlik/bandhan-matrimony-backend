@@ -11,7 +11,7 @@ router.post('/', function (req, res, next) {
 
     // simple query
     connection.query(
-        'SELECT u.*, udm.docPath FROM `users` u LEFT JOIN user_document_details_master udm ON u.id=udm.userId WHERE username=?', [user.username],
+        'SELECT u.*, udm.docPath, upm.gender FROM `users` u LEFT JOIN user_document_details_master udm ON u.id=udm.userId LEFT JOIN user_personal_details_master upm ON u.id=upm.userId WHERE username=?', [user.username],
         function (err, results) {
             if (err)
                 return res
@@ -44,6 +44,8 @@ router.post('/', function (req, res, next) {
                 userToken.name = element.firstName;
                 userToken.referCode = element.refferCode;
                 userToken.userCode = element.userCode;
+                userToken.profile = element.docPath;
+                userToken.gender = element.gender;
 
                 let token;
                 try {
