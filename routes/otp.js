@@ -20,7 +20,7 @@ router.post("/", async (req, res) => {
   });
 
   const mailData = {
-    from: "vaibhav.mandlik2@gmail.com", // sender address
+    from: "divyabandhan.online@gmail.com", // sender address
     to: email, // list of receivers
     subject: "OTP for two-fact authentication",
     html: "<b>OTP for Bandhan: </b> " + code,
