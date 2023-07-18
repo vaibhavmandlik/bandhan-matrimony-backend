@@ -22,8 +22,8 @@ router.post("/", async (req, res) => {
   const mailData = {
     from: "divyabandhan.online@gmail.com", // sender address
     to: email, // list of receivers
-    subject: "OTP for two-fact authentication",
-    html: "<b>OTP for Bandhan: </b> " + code,
+    subject: "Divya Bandhan - OTP for onboarding",
+    html: "Welcome to Divya Bandhan,<br> Your OTP for onboarding is " + code + "<br><br><br><br>Regards,<br>Team<br>Divya Bandhan",
   };
 
   transporter.sendMail(mailData, function (err, info) {
