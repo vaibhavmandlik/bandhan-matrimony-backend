@@ -55,7 +55,7 @@ async function saveUserData(res, result, user) {
   const promises = [];
 
   promises.push(new Promise((resolve, reject) => {
-    connection.query("INSERT INTO user_personal_details_master (userId, primaryPhoneNumber) VALUES (?, ?)", [result.insertId, user.personalDetails.primaryPhoneNumber], function (err, result) {
+    connection.query("INSERT INTO user_personal_details_master (userId, gender, primaryPhoneNumber) VALUES (?, ?, ?)", [result.insertId, user.personalDetails.gender, user.personalDetails.primaryPhoneNumber], function (err, result) {
       if (err) reject(err);
 
       console.log("Number of records inserted: " + result.affectedRows);
@@ -105,6 +105,8 @@ async function saveUserData(res, result, user) {
         userToken.name = user.firstName;
         userToken.referCode = refferCode;
         userToken.userCode = userCode;
+        userToken.profile = null;
+        userToken.gender = user.personalDetails.gender;
 
         try {
           //Creating jwt token
