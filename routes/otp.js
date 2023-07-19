@@ -13,8 +13,8 @@ router.post("/", async (req, res) => {
     port: 465, // true for 465, false for other ports
     host: "smtp.gmail.com",
     auth: {
-      user: "divyabandhan.online@gmail.com",
-      pass: "tmpikkubxqncgwrx",
+      user: "vaibhav.mandlik2@gmail.com",
+      pass: "wwixxvvjwhanveud",
     },
     secure: true,
   });
@@ -74,7 +74,12 @@ router.post("/authenticate", async (req, res) => {
         success: false,
         status: err.message
       });
-    } else if (result[0].validUpto > new Date()) {
+    } else if (result.length == 0) {
+      return res.status(500).json({
+        success: false,
+        status: "OTP not found"
+      });
+    }     else if (result[0].validUpto > new Date()) {
       return res.status(200).json({
         success: true,
       });
