@@ -1745,281 +1745,492 @@ async function executeUpdateQueries(req, res, user) {
     if ("basicDetails" in user) {
         var basicDetails = user.basicDetails;
 
-        var sql =
-            "UPDATE `user_basic_details_master` SET  height=?, weight=?, bodyTone=?, placeOfBirth=?, timeOfBirth=?, dateOfBirth=?, updatedBy=? WHERE userid=?";
-        var values = [
-            basicDetails.height,
-            basicDetails.weight,
-            basicDetails.bodyTone,
-            basicDetails.placeOfBirth,
-            basicDetails.timeOfBirth,
-            basicDetails.dateOfBirth,
-            basicDetails.userId,
-            basicDetails.userId,
-        ];
-
         promises.push(
             new Promise((resolve, reject) => {
-                connection.query(sql, values, function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        console.log("Number of records updated: " + result.affectedRows);
+                if ("userId" in basicDetails && basicDetails.userId != null && basicDetails.userId != "" && basicDetails.userId != undefined) {
+                    console.log("Record present in basic, now updating: ");
 
-                        basicDetails.id = result.insertId;
-                        response.basicDetails = basicDetails;
-                    }
-                    resolve();
-                });
+                    var sql =
+                        "UPDATE `user_basic_details_master` SET  height=?, weight=?, bodyTone=?, placeOfBirth=?, timeOfBirth=?, dateOfBirth=?, updatedBy=? WHERE userId=?";
+                    var values = [
+                        basicDetails.height,
+                        basicDetails.weight,
+                        basicDetails.bodyTone,
+                        basicDetails.placeOfBirth,
+                        basicDetails.timeOfBirth,
+                        basicDetails.dateOfBirth,
+                        basicDetails.userId,
+                        basicDetails.userId,
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Number of records updated in basic: " + result.affectedRows);
+
+                            basicDetails.id = result.insertId;
+                            response.basicDetails = basicDetails;
+                        }
+                        resolve();
+                    });
+                } else {
+                    var sql =
+                        "INSERT INTO `user_basic_details_master` (userId, height, weight, bodyTone, placeOfBirth, timeOfBirth, dateOfBirth, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    var values = [
+                        user.id,
+                        basicDetails.height,
+                        basicDetails.weight,
+                        basicDetails.bodyTone,
+                        basicDetails.placeOfBirth,
+                        basicDetails.timeOfBirth,
+                        basicDetails.dateOfBirth,
+                        user.id,
+                        user.id
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Record inserted in basic");
+
+                            basicDetails.id = result.insertId;
+                            response.basicDetails = basicDetails;
+                        }
+                        resolve();
+                    });
+                }
             })
         );
     }
 
     if ("additionalDetails" in user) {
         var additionalDetails = user.additionalDetails;
-        var sql =
-            "UPDATE `user_additional_details_master` SET hobbies=?, foodType=?, houseType=?, languages=?, preferences=?, updatedBy=? WHERE userid=?";
-        var values = [
-            additionalDetails.hobbies,
-            additionalDetails.foodType,
-            additionalDetails.houseType,
-            additionalDetails.languages,
-            additionalDetails.preferences,
-            additionalDetails.userId,
-            additionalDetails.userId,
-        ];
 
         promises.push(
             new Promise((resolve, reject) => {
-                connection.query(sql, values, function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        console.log("Number of records updated: " + result.affectedRows);
+                if ("userId" in additionalDetails && additionalDetails.userId != null && additionalDetails.userId != "" && additionalDetails.userId != undefined) {
+                    console.log("Record present in additional, now updating");
+                    var sql =
+                        "UPDATE `user_additional_details_master` SET hobbies=?, foodType=?, houseType=?, languages=?, preferences=?, updatedBy=? WHERE userid=?";
+                    var values = [
+                        additionalDetails.hobbies,
+                        additionalDetails.foodType,
+                        additionalDetails.houseType,
+                        additionalDetails.languages,
+                        additionalDetails.preferences,
+                        additionalDetails.userId,
+                        additionalDetails.userId
+                    ];
 
-                        additionalDetails.id = result.insertId;
-                        response.additionalDetails = additionalDetails;
-                    }
-                    resolve();
-                });
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Number of records updated in additional: " + result.affectedRows);
+
+                            additionalDetails.id = result.insertId;
+                            response.additionalDetails = additionalDetails;
+                        }
+                        resolve();
+                    });
+                } else {
+                    var sql =
+                        "INSERT INTO `user_additional_details_master` (userId, hobbies, foodType, houseType, languages, preferences, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                    var values = [
+                        user.id,
+                        additionalDetails.hobbies,
+                        additionalDetails.foodType,
+                        additionalDetails.houseType,
+                        additionalDetails.languages,
+                        additionalDetails.preferences,
+                        user.id,
+                        user.id
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Record inserted in additional");
+
+                            additionalDetails.id = result.insertId;
+                            response.additionalDetails = additionalDetails;
+                        }
+                        resolve();
+                    });
+                }
             })
         );
     }
 
     if ("addressDetails" in user) {
         var addressDetails = user.addressDetails;
-        var sql =
-            "UPDATE `user_address_details_master` SET addressLine1=?, addressLine2=?, landmark=?, taluka=?, city=?, currentCity=?, state=?, pincode=?, updatedBy=? WHERE userId=?";
-        var values = [
-            addressDetails.addressLine1,
-            addressDetails.addressLine2,
-            addressDetails.landmark,
-            addressDetails.taluka,
-            addressDetails.city,
-            addressDetails.currentCity,
-            addressDetails.state,
-            addressDetails.pincode,
-            addressDetails.userId,
-            addressDetails.userId,
-        ];
 
         promises.push(
             new Promise((resolve, reject) => {
-                connection.query(sql, values, function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        console.log("Number of records updated: " + result.affectedRows);
+                if ("userId" in addressDetails && addressDetails.userId != null && addressDetails.userId != "" && addressDetails.userId != undefined) {
+                    console.log("Records present in address, now updating");
+                    var sql =
+                        "UPDATE `user_address_details_master` SET addressLine1=?, addressLine2=?, landmark=?, taluka=?, city=?, currentCity=?, state=?, pincode=?, updatedBy=? WHERE userId=?";
+                    var values = [
+                        addressDetails.addressLine1,
+                        addressDetails.addressLine2,
+                        addressDetails.landmark,
+                        addressDetails.taluka,
+                        addressDetails.city,
+                        addressDetails.currentCity,
+                        addressDetails.state,
+                        addressDetails.pincode,
+                        addressDetails.userId,
+                        addressDetails.userId,
+                    ];
 
-                        addressDetails.id = result.insertId;
-                        response.addressDetails = addressDetails;
-                    }
-                    resolve();
-                });
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Number of records updated: " + result.affectedRows);
+
+                            addressDetails.id = result.insertId;
+                            response.addressDetails = addressDetails;
+                        }
+                        resolve();
+                    });
+                } else {
+                    var sql =
+                        "INSERT INTO `user_address_details_master` (userId, addressLine1, addressLine2, landmark, taluka, city, currentCity, state, pincode, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    var values = [
+                        user.id,
+                        addressDetails.addressLine1,
+                        addressDetails.addressLine2,
+                        addressDetails.landmark,
+                        addressDetails.taluka,
+                        addressDetails.city,
+                        addressDetails.currentCity,
+                        addressDetails.state,
+                        addressDetails.pincode,
+                        user.id,
+                        user.id
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Record inserted in address");
+
+                            addressDetails.id = result.insertId;
+                            response.addressDetails = addressDetails;
+                        }
+                        resolve();
+                    });
+                }
             })
         );
     }
 
     if ("educationalDetails" in user) {
         var educationalDetails = user.educationalDetails;
-        var sql =
-            "UPDATE `user_educational_details_master` SET educationType=?, qualification=?, stream=?, qualifiedFrom=?, updatedBy=? WHERE userId=?";
-        var values = [
-            educationalDetails.educationType,
-            educationalDetails.qualification,
-            educationalDetails.stream,
-            educationalDetails.qualifiedFrom,
-            educationalDetails.userId,
-            educationalDetails.userId,
-        ];
 
         promises.push(
             new Promise((resolve, reject) => {
-                connection.query(sql, values, function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        console.log("Number of records updated: " + result.affectedRows);
+                if ("userId" in educationalDetails && educationalDetails.userId != null && educationalDetails.userId != "" && educationalDetails.userId != undefined) {
+                    console.log("Records present in educational, now updating");
+                    var sql =
+                        "UPDATE `user_educational_details_master` SET educationType=?, qualification=?, stream=?, qualifiedFrom=?, updatedBy=? WHERE userId=?";
+                    var values = [
+                        educationalDetails.educationType,
+                        educationalDetails.qualification,
+                        educationalDetails.stream,
+                        educationalDetails.qualifiedFrom,
+                        educationalDetails.userId,
+                        educationalDetails.userId,
+                    ];
 
-                        educationalDetails.id = result.insertId;
-                        response.educationalDetails = educationalDetails;
-                    }
-                    resolve();
-                });
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Number of records updated: " + result.affectedRows);
+
+                            educationalDetails.id = result.insertId;
+                            response.educationalDetails = educationalDetails;
+                        }
+                        resolve();
+                    });
+                } else {
+                    var sql =
+                        "INSERT INTO `user_educational_details_master` (userId, educationType, qualification, stream, qualifiedFrom, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    var values = [
+                        user.id,
+                        educationalDetails.educationType,
+                        educationalDetails.qualification,
+                        educationalDetails.stream,
+                        educationalDetails.qualifiedFrom,
+                        user.id,
+                        user.id,
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Record inserted in educational");
+
+                            educationalDetails.id = result.insertId;
+                            response.educationalDetails = educationalDetails;
+                        }
+                        resolve();
+                    });
+                }
             })
         );
     }
 
     if ("kundaliDetails" in user) {
         var kundaliDetails = user.kundaliDetails;
-        var sql =
-            "UPDATE `user_kundali_details_master` SET moonStar=?, moonSign=?, gan=?, gotra=?, naadi=?, caste=?, subCaste=?, manglik=?, bloodGroup=?, updatedBy=? WHERE userId=?";
-        var values = [
-            kundaliDetails.moonStar,
-            kundaliDetails.moonSign,
-            kundaliDetails.gan,
-            kundaliDetails.gotra,
-            kundaliDetails.naadi,
-            kundaliDetails.caste,
-            kundaliDetails.subCaste,
-            kundaliDetails.manglik,
-            kundaliDetails.bloodGroup,
-            kundaliDetails.userId,
-            kundaliDetails.userId,
-        ];
 
         promises.push(
             new Promise((resolve, reject) => {
-                connection.query(sql, values, function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        console.log("Number of records inserted: " + result.affectedRows);
+                if ("userId" in kundaliDetails && kundaliDetails.userId != null && kundaliDetails.userId != "" && kundaliDetails.userId != undefined) {
+                    console.log("Records present in kundali, now updating");
+                    var sql =
+                        "UPDATE `user_kundali_details_master` SET moonStar=?, moonSign=?, gan=?, gotra=?, naadi=?, religion=?, caste=?, subCaste=?, manglik=?, bloodGroup=?, updatedBy=? WHERE userId=?";
+                    "";
+                    var values = [
+                        kundaliDetails.moonStar,
+                        kundaliDetails.moonSign,
+                        kundaliDetails.gan,
+                        kundaliDetails.gotra,
+                        kundaliDetails.naadi,
+                        kundaliDetails.religion,
+                        kundaliDetails.caste,
+                        kundaliDetails.subCaste,
+                        kundaliDetails.manglik,
+                        kundaliDetails.bloodGroup,
+                        kundaliDetails.userId,
+                        kundaliDetails.userId,
+                    ];
 
-                        kundaliDetails.id = result.insertId;
-                        response.kundaliDetails = kundaliDetails;
-                    }
-                    resolve();
-                });
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Number of records updated: " + result.affectedRows);
+
+                            kundaliDetails.id = result.insertId;
+                            response.kundaliDetails = kundaliDetails;
+                        }
+                        resolve();
+                    });
+                } else {
+                    var sql =
+                        "INSERT INTO `user_kundali_details_master` (userId, moonStar, moonSign, gan, gotra, naadi, religion, caste, subCaste, manglik, bloodGroup, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    var values = [
+                        user.id,
+                        kundaliDetails.moonStar,
+                        kundaliDetails.moonSign,
+                        kundaliDetails.gan,
+                        kundaliDetails.gotra,
+                        kundaliDetails.naadi,
+                        kundaliDetails.religion,
+                        kundaliDetails.caste,
+                        kundaliDetails.subCaste,
+                        kundaliDetails.manglik,
+                        kundaliDetails.bloodGroup,
+                        user.id,
+                        user.id,
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Record inserted in kundali");
+
+                            kundaliDetails.id = result.insertId;
+                            response.kundaliDetails = kundaliDetails;
+                        }
+                        resolve();
+                    });
+                }
             })
         );
     }
 
     if ("medicalDetails" in user) {
         var medicalDetails = user.medicalDetails;
-        var sql =
-            "UPDATE `user_medical_details_master` SET isSpectacles=?, alcoholic=?, smoking=?, medicalHistory=?, isInsured=?, updatedBy=? WHERE userId=?";
-        var values = [
-            medicalDetails.isSpectacles,
-            medicalDetails.alcoholic,
-            medicalDetails.smoking,
-            medicalDetails.medicalHistory,
-            medicalDetails.isInsured,
-            medicalDetails.userId,
-            medicalDetails.userId,
-        ];
 
         promises.push(
             new Promise((resolve, reject) => {
-                connection.query(sql, values, function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        console.log("Number of records inserted: " + result.affectedRows);
+                if ("userId" in medicalDetails && medicalDetails.userId != null && medicalDetails.userId != "" && medicalDetails.userId != undefined) {
+                    console.log("Records present in medical, now updating");
 
-                        medicalDetails.id = result.insertId;
-                        response.medicalDetails = medicalDetails;
-                    }
-                    resolve();
-                });
+                    var sql =
+                        "UPDATE `user_medical_details_master` SET isSpectacles=?, alcoholic=?, smoking=?, medicalHistory=?, isInsured=?, updatedBy=? WHERE userId=?";
+                    "";
+                    var values = [
+                        medicalDetails.isSpectacles,
+                        medicalDetails.alcoholic.toString(),
+                        medicalDetails.smoking.toString(),
+                        medicalDetails.medicalHistory,
+                        medicalDetails.isInsured,
+                        medicalDetails.userId,
+                        medicalDetails.userId,
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Number of records updated: " + result.affectedRows);
+
+                            medicalDetails.id = result.insertId;
+                            response.medicalDetails = medicalDetails;
+                        }
+                        resolve();
+                    });
+                } else {
+                    var sql =
+                        "INSERT INTO `user_medical_details_master` (userId, isSpectacles, alcoholic, smoking, medicalHistory, isInsured, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                    var values = [
+                        user.id,
+                        medicalDetails.isSpectacles,
+                        medicalDetails.alcoholic.toString(),
+                        medicalDetails.smoking.toString(),
+                        medicalDetails.medicalHistory,
+                        medicalDetails.isInsured,
+                        user.id,
+                        user.id,
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Record inserted in medical");
+
+                            medicalDetails.id = result.insertId;
+                            response.medicalDetails = medicalDetails;
+                        }
+                        resolve();
+                    });
+                }
             })
         );
     }
 
     if ("personalDetails" in user) {
         var personalDetails = user.personalDetails;
-        var sql =
-            "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
-        var values = [
-            personalDetails.gender,
-            personalDetails.primaryPhoneNumber,
-            personalDetails.secondaryPhoneNumber,
-            personalDetails.managedBy,
-            personalDetails.bio,
-            personalDetails.marriageType,
-            personalDetails.motherTongue,
-            personalDetails.familyType,
-            personalDetails.familyBio,
-            personalDetails.userId,
-            personalDetails.userId,
-        ];
 
         promises.push(
             new Promise((resolve, reject) => {
-                connection.query(sql, values, function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        console.log("Number of records inserted: " + result.affectedRows);
+                if ("userId" in personalDetails && personalDetails.userId != null && personalDetails.userId != "" && personalDetails.userId != undefined) {
+                    console.log("Records present in personal, now updating");
+                    var sql =
+                        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
+                    "userId, ";
+                    var values = [
+                        personalDetails.gender,
+                        personalDetails.primaryPhoneNumber,
+                        personalDetails.secondaryPhoneNumber,
+                        personalDetails.managedBy.toString(),
+                        personalDetails.bio,
+                        personalDetails.marriageType,
+                        personalDetails.motherTongue,
+                        personalDetails.familyType,
+                        personalDetails.familyBio,
+                        personalDetails.userId,
+                        personalDetails.userId,
+                    ];
 
-                        personalDetails.id = result.insertId;
-                        response.personalDetails = personalDetails;
-                    }
-                    resolve();
-                });
-            })
-        );
-    }
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Number of records updated: " + result.affectedRows);
 
-    if ("personalDocumentDetails" in user) {
-        var personalDocument = user.personalDocument;
-        var sql =
-            "UPDATE `user_personal_document_master` SET  aadharId=?, voterId=?, drivingId=?, updatedBy=? WHERE userId=?";
-        var values = [
-            personalDocument.aadharId,
-            personalDocument.voterId,
-            personalDocument.drivingId,
-            personalDocument.userId,
-            personalDocument.userId,
-        ];
+                            personalDetails.id = result.insertId;
+                            response.personalDetails = personalDetails;
+                        }
+                        resolve();
+                    });
+                } else {
+                    var sql =
+                        "INSERT INTO `user_address_details_master` (userId, gender, primaryPhoneNumber, secondaryPhoneNumber, managedBy, bio, marriageType, motherTongue, familyType, familyBio, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    var values = [
+                        user.id,
+                        personalDetails.gender,
+                        personalDetails.primaryPhoneNumber,
+                        personalDetails.secondaryPhoneNumber,
+                        personalDetails.managedBy,
+                        personalDetails.bio,
+                        personalDetails.marriageType,
+                        personalDetails.motherTongue,
+                        personalDetails.familyType,
+                        personalDetails.familyBio,
+                        user.id,
+                        user.id,
+                    ];
 
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query(sql, values, function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        console.log("Number of records inserted: " + result.affectedRows);
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Record inserted in address");
 
-                        personalDocument.id = result.insertId;
-                        response.personalDocument = personalDocument;
-                    }
-                    resolve();
-                });
+                            personalDetails.id = result.insertId;
+                            response.personalDetails = personalDetails;
+                        }
+                        resolve();
+                    });
+                }
             })
         );
     }
 
     if ("professionalDetails" in user) {
         var professionalDetails = user.professionalDetails;
-        var sql =
-            "UPDATE `user_professional_details_master` SET incomeType=?, designation=?, jobLocation=?, incomeRange=?, updatedBy=? WHERE userId=?";
-        var values = [
-            professionalDetails.incomeType,
-            professionalDetails.designation,
-            professionalDetails.jobLocation,
-            professionalDetails.incomeRange,
-            professionalDetails.userId,
-            professionalDetails.userId,
-        ];
 
         promises.push(
             new Promise((resolve, reject) => {
-                connection.query(sql, values, function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        console.log(
-                            "Number of records updated in professional: " +
-                            result.affectedRows
-                        );
+                if ("userId" in professionalDetails && professionalDetails.userId != null && professionalDetails.userId != "" && professionalDetails.userId != undefined) {
+                    console.log("Records present in professional, now updating");
 
-                        professionalDetails.id = result.insertId;
-                        response.professionalDetails = professionalDetails;
-                    }
-                    resolve();
-                });
+                    var sql =
+                        "UPDATE `user_professional_details_master` SET incomeType=?, designation=?, jobLocation=?, incomeRange=?, updatedBy=? WHERE userId=?";
+                    "";
+                    var values = [
+                        professionalDetails.incomeType,
+                        professionalDetails.designation,
+                        professionalDetails.jobLocation,
+                        professionalDetails.incomeRange,
+                        professionalDetails.userId,
+                        professionalDetails.userId,
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Number of records updated: " + result.affectedRows);
+
+                            professionalDetails.id = result.insertId;
+                            response.professionalDetails = professionalDetails;
+                        }
+                        resolve();
+                    });
+                } else {
+                    var sql =
+                        "INSERT INTO `user_address_details_master` (userId, incomeType, designation, jobLocation, incomeRange, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    var values = [
+                        user.id,
+                        professionalDetails.incomeType,
+                        professionalDetails.designation,
+                        professionalDetails.jobLocation,
+                        professionalDetails.incomeRange,
+                        user.id,
+                        user.id,
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Record inserted in professional");
+
+                            professionalDetails.id = result.insertId;
+                            response.professionalDetails = professionalDetails;
+                        }
+                        resolve();
+                    });
+                }
             })
         );
     }
