@@ -1,11 +1,8 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 var common = require("./common");
-
 var router = express.Router();
-
 var connection = require("./connection");
-var common = require("./common");
 
 router.post("/", function (req, res, next) {
   const user = req.body;

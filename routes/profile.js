@@ -1,10 +1,8 @@
 const express = require("express");
-
 var notification = require("../services/notification");
-
 var router = express.Router();
-
 var connection = require("./connection");
+var common = require("./common");
 
 var response = {
     error: {
@@ -1753,12 +1751,12 @@ async function executeUpdateQueries(req, res, user) {
                     var sql =
                         "UPDATE `user_basic_details_master` SET  height=?, weight=?, bodyTone=?, placeOfBirth=?, timeOfBirth=?, dateOfBirth=?, updatedBy=? WHERE userId=?";
                     var values = [
-                        basicDetails.height,
-                        basicDetails.weight,
-                        basicDetails.bodyTone,
-                        basicDetails.placeOfBirth,
-                        basicDetails.timeOfBirth,
-                        basicDetails.dateOfBirth,
+                        common.isNullOrEmptyOrUndefined(basicDetails.height) ? "" : basicDetails.height,
+                        common.isNullOrEmptyOrUndefined(basicDetails.weight) ? "" : basicDetails.weight,
+                        common.isNullOrEmptyOrUndefined(basicDetails.bodyTone) ? "" : basicDetails.bodyTone,
+                        common.isNullOrEmptyOrUndefined(basicDetails.placeOfBirth) ? "" : basicDetails.placeOfBirth,
+                        common.isNullOrEmptyOrUndefined(basicDetails.timeOfBirth) ? "" : basicDetails.timeOfBirth,
+                        common.isNullOrEmptyOrUndefined(basicDetails.dateOfBirth) ? "" : basicDetails.dateOfBirth,
                         basicDetails.userId,
                         basicDetails.userId,
                     ];
@@ -1778,12 +1776,12 @@ async function executeUpdateQueries(req, res, user) {
                         "INSERT INTO `user_basic_details_master` (userId, height, weight, bodyTone, placeOfBirth, timeOfBirth, dateOfBirth, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
-                        basicDetails.height,
-                        basicDetails.weight,
-                        basicDetails.bodyTone,
-                        basicDetails.placeOfBirth,
-                        basicDetails.timeOfBirth,
-                        basicDetails.dateOfBirth,
+                        common.isNullOrEmptyOrUndefined(basicDetails.height) ? "" : basicDetails.height,
+                        common.isNullOrEmptyOrUndefined(basicDetails.weight) ? "" : basicDetails.weight,
+                        common.isNullOrEmptyOrUndefined(basicDetails.bodyTone) ? "" : basicDetails.bodyTone,
+                        common.isNullOrEmptyOrUndefined(basicDetails.placeOfBirth) ? "" : basicDetails.placeOfBirth,
+                        common.isNullOrEmptyOrUndefined(basicDetails.timeOfBirth) ? "" : basicDetails.timeOfBirth,
+                        common.isNullOrEmptyOrUndefined(basicDetails.dateOfBirth) ? "" : basicDetails.dateOfBirth,
                         user.id,
                         user.id
                     ];
@@ -1813,16 +1811,16 @@ async function executeUpdateQueries(req, res, user) {
                     var sql =
                         "UPDATE `user_additional_details_master` SET hobbies=?, foodType=?, houseType=?, languages=?, preferences=?, updatedBy=? WHERE userid=?";
                     var values = [
-                        additionalDetails.hobbies,
-                        additionalDetails.foodType,
-                        additionalDetails.houseType,
-                        additionalDetails.languages,
-                        additionalDetails.preferences,
+                        common.isNullOrEmptyOrUndefined(additionalDetails.hobbies) ? "" : String(additionalDetails.hobbies),
+                        common.isNullOrEmptyOrUndefined(additionalDetails.foodType) ? "" : additionalDetails.foodType,
+                        common.isNullOrEmptyOrUndefined(additionalDetails.houseType) ? "" : additionalDetails.houseType,
+                        common.isNullOrEmptyOrUndefined(additionalDetails.languages) ? "" : additionalDetails.languages,
+                        common.isNullOrEmptyOrUndefined(additionalDetails.preferences) ? "" : additionalDetails.preferences,
                         additionalDetails.userId,
                         additionalDetails.userId
                     ];
 
-                    connection.query(sql, values, function (err, result) {
+                    let query = connection.query(sql, values, function (err, result) {
                         if (err) reject(err);
                         else {
                             console.log("Number of records updated in additional: " + result.affectedRows);
@@ -1832,16 +1830,18 @@ async function executeUpdateQueries(req, res, user) {
                         }
                         resolve();
                     });
+
+                    console.log(query);
                 } else {
                     var sql =
                         "INSERT INTO `user_additional_details_master` (userId, hobbies, foodType, houseType, languages, preferences, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
-                        additionalDetails.hobbies,
-                        additionalDetails.foodType,
-                        additionalDetails.houseType,
-                        additionalDetails.languages,
-                        additionalDetails.preferences,
+                        common.isNullOrEmptyOrUndefined(additionalDetails.hobbies) ? "" : additionalDetails.hobbies,
+                        common.isNullOrEmptyOrUndefined(additionalDetails.foodType) ? "" : additionalDetails.foodType,
+                        common.isNullOrEmptyOrUndefined(additionalDetails.houseType) ? "" : additionalDetails.houseType,
+                        common.isNullOrEmptyOrUndefined(additionalDetails.languages) ? "" : additionalDetails.languages,
+                        common.isNullOrEmptyOrUndefined(additionalDetails.preferences) ? "" : additionalDetails.preferences,
                         user.id,
                         user.id
                     ];
@@ -1871,14 +1871,14 @@ async function executeUpdateQueries(req, res, user) {
                     var sql =
                         "UPDATE `user_address_details_master` SET addressLine1=?, addressLine2=?, landmark=?, taluka=?, city=?, currentCity=?, state=?, pincode=?, updatedBy=? WHERE userId=?";
                     var values = [
-                        addressDetails.addressLine1,
-                        addressDetails.addressLine2,
-                        addressDetails.landmark,
-                        addressDetails.taluka,
-                        addressDetails.city,
-                        addressDetails.currentCity,
-                        addressDetails.state,
-                        addressDetails.pincode,
+                        common.isNullOrEmptyOrUndefined(addressDetails.addressLine1) ? "" : addressDetails.addressLine1,
+                        common.isNullOrEmptyOrUndefined(addressDetails.addressLine2) ? "" : addressDetails.addressLine2,
+                        common.isNullOrEmptyOrUndefined(addressDetails.landmark) ? "" : addressDetails.landmark,
+                        common.isNullOrEmptyOrUndefined(addressDetails.taluka) ? "" : addressDetails.taluka,
+                        common.isNullOrEmptyOrUndefined(addressDetails.city) ? "" : addressDetails.city,
+                        common.isNullOrEmptyOrUndefined(addressDetails.currentCity) ? "" : addressDetails.currentCity,
+                        common.isNullOrEmptyOrUndefined(addressDetails.state) ? "" : addressDetails.state,
+                        common.isNullOrEmptyOrUndefined(addressDetails.pincode) ? "" : addressDetails.pincode,
                         addressDetails.userId,
                         addressDetails.userId,
                     ];
@@ -1898,14 +1898,14 @@ async function executeUpdateQueries(req, res, user) {
                         "INSERT INTO `user_address_details_master` (userId, addressLine1, addressLine2, landmark, taluka, city, currentCity, state, pincode, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
-                        addressDetails.addressLine1,
-                        addressDetails.addressLine2,
-                        addressDetails.landmark,
-                        addressDetails.taluka,
-                        addressDetails.city,
-                        addressDetails.currentCity,
-                        addressDetails.state,
-                        addressDetails.pincode,
+                        common.isNullOrEmptyOrUndefined(addressDetails.addressLine1) ? "" : addressDetails.addressLine1,
+                        common.isNullOrEmptyOrUndefined(addressDetails.addressLine2) ? "" : addressDetails.addressLine2,
+                        common.isNullOrEmptyOrUndefined(addressDetails.landmark) ? "" : addressDetails.landmark,
+                        common.isNullOrEmptyOrUndefined(addressDetails.taluka) ? "" : addressDetails.taluka,
+                        common.isNullOrEmptyOrUndefined(addressDetails.city) ? "" : addressDetails.city,
+                        common.isNullOrEmptyOrUndefined(addressDetails.currentCity) ? "" : addressDetails.currentCity,
+                        common.isNullOrEmptyOrUndefined(addressDetails.state) ? "" : addressDetails.state,
+                        common.isNullOrEmptyOrUndefined(addressDetails.pincode) ? "" : addressDetails.pincode,
                         user.id,
                         user.id
                     ];
@@ -1935,10 +1935,10 @@ async function executeUpdateQueries(req, res, user) {
                     var sql =
                         "UPDATE `user_educational_details_master` SET educationType=?, qualification=?, stream=?, qualifiedFrom=?, updatedBy=? WHERE userId=?";
                     var values = [
-                        educationalDetails.educationType,
-                        educationalDetails.qualification,
-                        educationalDetails.stream,
-                        educationalDetails.qualifiedFrom,
+                        common.isNullOrEmptyOrUndefined(educationalDetails.educationType) ? "" : educationalDetails.educationType,
+                        common.isNullOrEmptyOrUndefined(educationalDetails.qualification) ? "" : educationalDetails.qualification,
+                        common.isNullOrEmptyOrUndefined(educationalDetails.stream) ? "" : educationalDetails.stream,
+                        common.isNullOrEmptyOrUndefined(educationalDetails.qualifiedFrom) ? "" : educationalDetails.qualifiedFrom,
                         educationalDetails.userId,
                         educationalDetails.userId,
                     ];
@@ -1958,10 +1958,10 @@ async function executeUpdateQueries(req, res, user) {
                         "INSERT INTO `user_educational_details_master` (userId, educationType, qualification, stream, qualifiedFrom, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
-                        educationalDetails.educationType,
-                        educationalDetails.qualification,
-                        educationalDetails.stream,
-                        educationalDetails.qualifiedFrom,
+                        common.isNullOrEmptyOrUndefined(educationalDetails.educationType) ? "" : educationalDetails.educationType,
+                        common.isNullOrEmptyOrUndefined(educationalDetails.qualification) ? "" : educationalDetails.qualification,
+                        common.isNullOrEmptyOrUndefined(educationalDetails.stream) ? "" : educationalDetails.stream,
+                        common.isNullOrEmptyOrUndefined(educationalDetails.qualifiedFrom) ? "" : educationalDetails.qualifiedFrom,
                         user.id,
                         user.id,
                     ];
@@ -1992,16 +1992,16 @@ async function executeUpdateQueries(req, res, user) {
                         "UPDATE `user_kundali_details_master` SET moonStar=?, moonSign=?, gan=?, gotra=?, naadi=?, religion=?, caste=?, subCaste=?, manglik=?, bloodGroup=?, updatedBy=? WHERE userId=?";
                     "";
                     var values = [
-                        kundaliDetails.moonStar,
-                        kundaliDetails.moonSign,
-                        kundaliDetails.gan,
-                        kundaliDetails.gotra,
-                        kundaliDetails.naadi,
-                        kundaliDetails.religion,
-                        kundaliDetails.caste,
-                        kundaliDetails.subCaste,
-                        kundaliDetails.manglik,
-                        kundaliDetails.bloodGroup,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.moonStar) ? "" : kundaliDetails.moonStar,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.moonSign) ? "" : kundaliDetails.moonSign,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.gan) ? "" : kundaliDetails.gan,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.gotra) ? "" : kundaliDetails.gotra,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.naadi) ? "" : kundaliDetails.naadi,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.religion) ? "" : kundaliDetails.religion,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.caste) ? "" : kundaliDetails.caste,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.subCaste) ? "" : kundaliDetails.subCaste,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.manglik) ? "" : kundaliDetails.manglik,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.bloodGroup) ? "" : kundaliDetails.bloodGroup,
                         kundaliDetails.userId,
                         kundaliDetails.userId,
                     ];
@@ -2021,16 +2021,16 @@ async function executeUpdateQueries(req, res, user) {
                         "INSERT INTO `user_kundali_details_master` (userId, moonStar, moonSign, gan, gotra, naadi, religion, caste, subCaste, manglik, bloodGroup, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
-                        kundaliDetails.moonStar,
-                        kundaliDetails.moonSign,
-                        kundaliDetails.gan,
-                        kundaliDetails.gotra,
-                        kundaliDetails.naadi,
-                        kundaliDetails.religion,
-                        kundaliDetails.caste,
-                        kundaliDetails.subCaste,
-                        kundaliDetails.manglik,
-                        kundaliDetails.bloodGroup,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.moonStar) ? "" : kundaliDetails.moonStar,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.moonSign) ? "" : kundaliDetails.moonSign,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.gan) ? "" : kundaliDetails.gan,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.gotra) ? "" : kundaliDetails.gotra,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.naadi) ? "" : kundaliDetails.naadi,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.religion) ? "" : kundaliDetails.religion,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.caste) ? "" : kundaliDetails.caste,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.subCaste) ? "" : kundaliDetails.subCaste,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.manglik) ? "" : kundaliDetails.manglik,
+                        common.isNullOrEmptyOrUndefined(kundaliDetails.bloodGroup) ? "" : kundaliDetails.bloodGroup,
                         user.id,
                         user.id,
                     ];
@@ -2062,11 +2062,11 @@ async function executeUpdateQueries(req, res, user) {
                         "UPDATE `user_medical_details_master` SET isSpectacles=?, alcoholic=?, smoking=?, medicalHistory=?, isInsured=?, updatedBy=? WHERE userId=?";
                     "";
                     var values = [
-                        medicalDetails.isSpectacles,
-                        medicalDetails.alcoholic.toString(),
-                        medicalDetails.smoking.toString(),
-                        medicalDetails.medicalHistory,
-                        medicalDetails.isInsured,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.isSpectacles) ? "" : medicalDetails.isSpectacles,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.alcoholic) ? "" : medicalDetails.alcoholic,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.smoking) ? "" : medicalDetails.smoking,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.medicalHistory) ? "" : medicalDetails.medicalHistory,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.isInsured) ? "" : medicalDetails.isInsured,
                         medicalDetails.userId,
                         medicalDetails.userId,
                     ];
@@ -2086,11 +2086,11 @@ async function executeUpdateQueries(req, res, user) {
                         "INSERT INTO `user_medical_details_master` (userId, isSpectacles, alcoholic, smoking, medicalHistory, isInsured, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
-                        medicalDetails.isSpectacles,
-                        medicalDetails.alcoholic.toString(),
-                        medicalDetails.smoking.toString(),
-                        medicalDetails.medicalHistory,
-                        medicalDetails.isInsured,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.isSpectacles) ? "" : medicalDetails.isSpectacles,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.alcoholic) ? "" : medicalDetails.alcoholic,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.smoking) ? "" : medicalDetails.smoking,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.medicalHistory) ? "" : medicalDetails.medicalHistory,
+                        common.isNotNullOrEmptyOrUndefined(medicalDetails.isInsured) ? "" : medicalDetails.isInsured,
                         user.id,
                         user.id,
                     ];
@@ -2121,15 +2121,15 @@ async function executeUpdateQueries(req, res, user) {
                         "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
                     "userId, ";
                     var values = [
-                        personalDetails.gender,
-                        personalDetails.primaryPhoneNumber,
-                        personalDetails.secondaryPhoneNumber,
-                        personalDetails.managedBy.toString(),
-                        personalDetails.bio,
-                        personalDetails.marriageType,
-                        personalDetails.motherTongue,
-                        personalDetails.familyType,
-                        personalDetails.familyBio,
+                        common.isNullOrEmptyOrUndefined(personalDetails.gender) ? "" : personalDetails.gender,
+                        common.isNullOrEmptyOrUndefined(personalDetails.primaryPhoneNumber) ? "" : personalDetails.primaryPhoneNumber,
+                        common.isNullOrEmptyOrUndefined(personalDetails.secondaryPhoneNumber) ? "" : personalDetails.secondaryPhoneNumber,
+                        common.isNullOrEmptyOrUndefined(personalDetails.managedBy) ? "" : String(personalDetails.managedBy),
+                        common.isNullOrEmptyOrUndefined(personalDetails.bio) ? "" : personalDetails.bio,
+                        common.isNullOrEmptyOrUndefined(personalDetails.marriageType) ? "" : personalDetails.marriageType,
+                        common.isNullOrEmptyOrUndefined(personalDetails.motherTongue) ? "" : personalDetails.motherTongue,
+                        common.isNullOrEmptyOrUndefined(personalDetails.familyType) ? "" : personalDetails.familyType,
+                        common.isNullOrEmptyOrUndefined(personalDetails.familyBio) ? "" : personalDetails.familyBio,
                         personalDetails.userId,
                         personalDetails.userId,
                     ];
@@ -2149,15 +2149,15 @@ async function executeUpdateQueries(req, res, user) {
                         "INSERT INTO `user_address_details_master` (userId, gender, primaryPhoneNumber, secondaryPhoneNumber, managedBy, bio, marriageType, motherTongue, familyType, familyBio, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
-                        personalDetails.gender,
-                        personalDetails.primaryPhoneNumber,
-                        personalDetails.secondaryPhoneNumber,
-                        personalDetails.managedBy,
-                        personalDetails.bio,
-                        personalDetails.marriageType,
-                        personalDetails.motherTongue,
-                        personalDetails.familyType,
-                        personalDetails.familyBio,
+                        common.isNullOrEmptyOrUndefined(personalDetails.gender) ? "" : personalDetails.gender,
+                        common.isNullOrEmptyOrUndefined(personalDetails.primaryPhoneNumber) ? "" : personalDetails.primaryPhoneNumber,
+                        common.isNullOrEmptyOrUndefined(personalDetails.secondaryPhoneNumber) ? "" : personalDetails.secondaryPhoneNumber,
+                        common.isNullOrEmptyOrUndefined(personalDetails.managedBy) ? "" : personalDetails.managedBy,
+                        common.isNullOrEmptyOrUndefined(personalDetails.bio) ? "" : personalDetails.bio,
+                        common.isNullOrEmptyOrUndefined(personalDetails.marriageType) ? "" : personalDetails.marriageType,
+                        common.isNullOrEmptyOrUndefined(personalDetails.motherTongue) ? "" : personalDetails.motherTongue,
+                        common.isNullOrEmptyOrUndefined(personalDetails.familyType) ? "" : personalDetails.familyType,
+                        common.isNullOrEmptyOrUndefined(personalDetails.familyBio) ? "" : personalDetails.familyBio,
                         user.id,
                         user.id,
                     ];
@@ -2189,10 +2189,10 @@ async function executeUpdateQueries(req, res, user) {
                         "UPDATE `user_professional_details_master` SET incomeType=?, designation=?, jobLocation=?, incomeRange=?, updatedBy=? WHERE userId=?";
                     "";
                     var values = [
-                        professionalDetails.incomeType,
-                        professionalDetails.designation,
-                        professionalDetails.jobLocation,
-                        professionalDetails.incomeRange,
+                        common.isNullOrEmptyOrUndefined(professionalDetails.incomeType) ? "" : professionalDetails.incomeType,
+                        common.isNullOrEmptyOrUndefined(professionalDetails.designation) ? "" : professionalDetails.designation,
+                        common.isNullOrEmptyOrUndefined(professionalDetails.jobLocation) ? "" : professionalDetails.jobLocation,
+                        common.isNullOrEmptyOrUndefined(professionalDetails.incomeRange) ? "" : professionalDetails.incomeRange,
                         professionalDetails.userId,
                         professionalDetails.userId,
                     ];
@@ -2212,10 +2212,10 @@ async function executeUpdateQueries(req, res, user) {
                         "INSERT INTO `user_address_details_master` (userId, incomeType, designation, jobLocation, incomeRange, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
-                        professionalDetails.incomeType,
-                        professionalDetails.designation,
-                        professionalDetails.jobLocation,
-                        professionalDetails.incomeRange,
+                        common.isNullOrEmptyOrUndefined(professionalDetails.incomeType) ? "" : professionalDetails.incomeType,
+                        common.isNullOrEmptyOrUndefined(professionalDetails.designation) ? "" : professionalDetails.designation,
+                        common.isNullOrEmptyOrUndefined(professionalDetails.jobLocation) ? "" : professionalDetails.jobLocation,
+                        common.isNullOrEmptyOrUndefined(professionalDetails.incomeRange) ? "" : professionalDetails.incomeRange,
                         user.id,
                         user.id,
                     ];
