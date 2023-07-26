@@ -2146,7 +2146,7 @@ async function executeUpdateQueries(req, res, user) {
                     });
                 } else {
                     var sql =
-                        "INSERT INTO `user_address_details_master` (userId, gender, primaryPhoneNumber, secondaryPhoneNumber, managedBy, bio, marriageType, motherTongue, familyType, familyBio, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        "INSERT INTO `user_personal_details_master` (userId, gender, primaryPhoneNumber, secondaryPhoneNumber, managedBy, bio, marriageType, motherTongue, familyType, familyBio, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
                         common.isNullOrEmptyOrUndefined(personalDetails.gender) ? "" : personalDetails.gender,
@@ -2209,7 +2209,7 @@ async function executeUpdateQueries(req, res, user) {
                     });
                 } else {
                     var sql =
-                        "INSERT INTO `user_address_details_master` (userId, incomeType, designation, jobLocation, incomeRange, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                        "INSERT INTO `user_professional_details_master` (userId, incomeType, designation, jobLocation, incomeRange, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
                         common.isNullOrEmptyOrUndefined(professionalDetails.incomeType) ? "" : professionalDetails.incomeType,
