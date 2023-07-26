@@ -1,5 +1,7 @@
+var connection = require("./connection");
+
 function userCodeGenerator(chars, serialLength) {
-        var randomSerial = "",
+    var randomSerial = "",
         i,
         randomNumber;
 
@@ -11,4 +13,39 @@ function userCodeGenerator(chars, serialLength) {
     return randomSerial;
 }
 
-module.exports = { userCodeGenerator };
+function addNotification() {
+
+}
+
+function isNullOrEmptyOrUndefined(obj) {
+
+    if (obj == "" || obj == null || obj == undefined || JSON.stringify(obj) === JSON.stringify({}))
+        return true;
+    else
+        return false;
+}
+
+function isNotNullOrEmptyOrUndefined(obj) {
+    if (obj == "" || obj == null || obj == undefined)
+        return false;
+    else
+        return true;
+}
+
+
+function isNullOrUndefined(obj) {
+    if (obj == null || obj == undefined)
+        return true;
+    else
+        return false;
+}
+
+
+function isNotNullOrUndefined(obj) {
+    if (obj == null || obj == undefined)
+        return false;
+    else
+        return true;
+}
+
+module.exports = { userCodeGenerator, addNotification, isNotNullOrEmptyOrUndefined, isNotNullOrUndefined, isNullOrEmptyOrUndefined, isNullOrUndefined };
