@@ -1930,53 +1930,35 @@ async function executeUpdateQueries(req, res, user) {
 
         promises.push(
             new Promise((resolve, reject) => {
-                if ("userId" in educationalDetails && educationalDetails.userId != null && educationalDetails.userId != "" && educationalDetails.userId != undefined) {
-                    console.log("Records present in educational, now updating");
-                    var sql =
-                        "UPDATE `user_educational_details_master` SET educationType=?, qualification=?, stream=?, qualifiedFrom=?, updatedBy=? WHERE userId=?";
-                    var values = [
-                        common.isNullOrEmptyOrUndefined(educationalDetails.educationType) ? "" : educationalDetails.educationType,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.qualification) ? "" : educationalDetails.qualification,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.stream) ? "" : educationalDetails.stream,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.qualifiedFrom) ? "" : educationalDetails.qualifiedFrom,
-                        educationalDetails.userId,
-                        educationalDetails.userId,
-                    ];
+                connection.query("UPDATE user_educational_details_master SET enabled='0' WHERE userId=?", [user.id], function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        educationalDetails.forEach(data => {
+                            var sql =
+                                "INSERT INTO `user_educational_details_master` (userId, educationType, qualification, stream, qualifiedFrom, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                            var values = [
+                                user.id,
+                                common.isNullOrEmptyOrUndefined(data.educationType) ? "" : data.educationType,
+                                common.isNullOrEmptyOrUndefined(data.qualification) ? "" : data.qualification,
+                                common.isNullOrEmptyOrUndefined(data.stream) ? "" : data.stream,
+                                common.isNullOrEmptyOrUndefined(data.qualifiedFrom) ? "" : data.qualifiedFrom,
+                                user.id,
+                                user.id,
+                            ];
 
-                    connection.query(sql, values, function (err, result) {
-                        if (err) reject(err);
-                        else {
-                            console.log("Number of records updated: " + result.affectedRows);
+                            connection.query(sql, values, function (err, result) {
+                                if (err) reject(err);
+                                else {
+                                    console.log("Record inserted in educational");
 
-                            educationalDetails.id = result.insertId;
-                            response.educationalDetails = educationalDetails;
-                        }
+                                    data.id = result.insertId;
+                                }
+                            });
+                        });
+                        response.educationalDetails = educationalDetails;
                         resolve();
-                    });
-                } else {
-                    var sql =
-                        "INSERT INTO `user_educational_details_master` (userId, educationType, qualification, stream, qualifiedFrom, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
-                    var values = [
-                        user.id,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.educationType) ? "" : educationalDetails.educationType,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.qualification) ? "" : educationalDetails.qualification,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.stream) ? "" : educationalDetails.stream,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.qualifiedFrom) ? "" : educationalDetails.qualifiedFrom,
-                        user.id,
-                        user.id,
-                    ];
-
-                    connection.query(sql, values, function (err, result) {
-                        if (err) reject(err);
-                        else {
-                            console.log("Record inserted in educational");
-
-                            educationalDetails.id = result.insertId;
-                            response.educationalDetails = educationalDetails;
-                        }
-                        resolve();
-                    });
-                }
+                    }
+                });
             })
         );
     }
@@ -2348,7 +2330,7 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                     else if (result.length > 0) {
                         console.log("Number of records from educational: " + result.length);
 
-                        responseData.educationalDetails = result[0];
+                        responseData.educationalDetails = result;   
                     }
 
                     resolve();
