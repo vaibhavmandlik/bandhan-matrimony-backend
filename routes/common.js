@@ -13,7 +13,21 @@ function userCodeGenerator(chars, serialLength) {
     return randomSerial;
 }
 
-function addNotification() {
+function addNotification(userId, message, data) {
+    var sql = `INSERT INTO notification_master (userId, message, data, createdBy) VALUES (?, ?, ?, ?)`;
+    var values = [userId, message, data, userId];
+
+    connection.query(sql, values, function (err, chatResult) {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(
+                "Number of records inserted in notification master:: " + chatResult.affectedRows
+            );
+
+        }
+
+    });
 
 }
 
