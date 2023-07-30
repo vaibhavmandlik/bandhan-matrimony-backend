@@ -2,11 +2,11 @@ const mysql = require('mysql2');
 
 // create the connection to database
 const connection = mysql.createConnection({
-  host: 'sql12.freemysqlhosting.net',
+  host: 'sql6.freemysqlhosting.net',
   port: 3306,
-  user: 'sql12621770',
-  password: '5hEAGiQwBA',
-  database: 'sql12621770'
+  user: 'sql6636190',
+  password: 'gSVbQXBzik',
+  database: 'sql6636190'
 });
 
 connection.connectionLimit = 10
