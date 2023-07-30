@@ -333,4 +333,20 @@ router.put('/updateToken', function (req, res, next) {
 
 });
 
+router.get('/notification', function (req, res, next) {
+  // simple query
+  connection.query(
+    'SELECT * FROM `notification_master` WHERE userId= ?', [req.query.userId],
+    function (err, results, fields) {
+      console.log(results);
+
+      res
+        .status(200)
+        .json({
+          success: true,
+          data: results,
+        });
+    });
+});
+
 module.exports = router;

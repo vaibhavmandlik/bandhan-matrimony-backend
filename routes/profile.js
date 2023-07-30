@@ -791,6 +791,8 @@ router.put("/interest", function (req, res, next) {
                                         };
 
                                         notification.send(message);
+                                        common.addNotification(interestResult[0].userId, message.notification.body, JSON.stringify(message.data));
+
                                     }
                                 });
                             }
@@ -897,6 +899,8 @@ router.post("/interest", function (req, res, next) {
                                         };
 
                                         notification.send(message);
+                                        common.addNotification(userResult[0].id, message.notification.body, JSON.stringify(message.data));
+
                                     }
                                 });
                             }
@@ -1079,7 +1083,7 @@ async function executeQueries(req, res) {
         promises.push(
             new Promise((resolve, reject) => {
                 connection.query(
-                    "SELECT `userId` FROM `user_basic_details_master` WHERE `height` <= ? OR `height`>=?",
+                    "SELECT `userId` FROM `user_basic_details_master` WHERE (`height` >= ? AND `height`<=?) AND height <> ''",
                     [req.body.fromHeight, req.body.toHeight],
                     function (err, userResult, fields) {
                         if (err) {
@@ -1120,7 +1124,7 @@ async function executeQueries(req, res) {
         promises.push(
             new Promise((resolve, reject) => {
                 connection.query(
-                    "SELECT `userId` FROM `user_basic_details_master` WHERE `weight` <= ? OR `weight`>=?",
+                    "SELECT `userId` FROM `user_basic_details_master` WHERE (`weight` >= ? AND `weight`<=?) OR `weight` <> '' ",
                     [req.body.fromWeight, req.body.toWeight],
                     function (err, userResult, fields) {
                         if (err) {
@@ -1157,14 +1161,15 @@ async function executeQueries(req, res) {
         );
     }
 
+    
     if ("location" in req.body) {
-        if (locations != "" || locations != null || locations != undefined) {
+        if (req.body.locations != "" || req.body.locations != null || req.body.locations != undefined) {
             let locations = req.body.location.split(",");
 
             promises.push(
                 new Promise((resolve, reject) => {
                     connection.query(
-                        "SELECT `userId` FROM `user_address_details_master` WHERE `city` IN (?)",
+                        "SELECT `userId` FROM `user_address_details_master` WHERE `city` IN (?) AND city <> ''",
                         [locations],
                         function (err, userResult, fields) {
                             if (err) reject(err);
@@ -1211,7 +1216,7 @@ async function executeQueries(req, res) {
             promises.push(
                 new Promise((resolve, reject) => {
                     connection.query(
-                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `religion` = ?",
+                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `religion` = ? AND religion <> ''",
                         [req.body.religion],
                         function (err, userResult, fields) {
                             if (err) reject(err);
@@ -1257,7 +1262,7 @@ async function executeQueries(req, res) {
             promises.push(
                 new Promise((resolve, reject) => {
                     connection.query(
-                        "SELECT `userId` FROM `user_personal_details_master` WHERE `marriageType` = ?",
+                        "SELECT `userId` FROM `user_personal_details_master` WHERE `marriageType` = ? AND marriageType <> ''",
                         [req.body.maritalStatus],
                         function (err, userResult, fields) {
                             if (err) reject(err);
@@ -1306,7 +1311,7 @@ async function executeQueries(req, res) {
                     let a = req.body.casteSubcaste.split(",");
 
                     connection.query(
-                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `caste` = ? AND `subCaste` = ?",
+                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `(caste` = ? AND `subCaste` = ?) AND (caste <> '' AND subCaste <> '')",
                         [a[0], a[1]],
                         function (err, userResult, fields) {
                             if (err) reject(err);
@@ -1352,7 +1357,7 @@ async function executeQueries(req, res) {
             promises.push(
                 new Promise((resolve, reject) => {
                     connection.query(
-                        "SELECT `userId` FROM `user_personal_details_master` WHERE `motherTongue` = ?",
+                        "SELECT `userId` FROM `user_personal_details_master` WHERE `motherTongue` = ? AND motherTongue <> ''",
                         [req.body.motherTongue],
                         function (err, userResult, fields) {
                             if (err) reject(err);
@@ -1398,7 +1403,7 @@ async function executeQueries(req, res) {
             promises.push(
                 new Promise((resolve, reject) => {
                     connection.query(
-                        "SELECT `userId` FROM `user_basic_details_master` WHERE YEAR(`dateOfBirth`) >= ?",
+                        "SELECT `userId` FROM `user_basic_details_master` WHERE YEAR(`dateOfBirth`) >= ? AND dateOfBirth <> ''",
                         [req.body.bornAfter],
                         function (err, userResult, fields) {
                             if (err) reject(err);
@@ -1444,7 +1449,7 @@ async function executeQueries(req, res) {
             promises.push(
                 new Promise((resolve, reject) => {
                     connection.query(
-                        "SELECT `userId` FROM `user_kundali_details_master` WHERE manglik = ?",
+                        "SELECT `userId` FROM `user_kundali_details_master` WHERE manglik = ? AND manglik <> ''",
                         [req.body.mangalik],
                         function (err, userResult, fields) {
                             if (err) reject(err);
@@ -1525,7 +1530,7 @@ async function executeQueries(req, res) {
         promises.push(
             new Promise((resolve, reject) => {
                 connection.query(
-                    "SELECT `userId` FROM `user_professional_details_master` WHERE incomeRange = ?",
+                    "SELECT `userId` FROM `user_professional_details_master` WHERE incomeRange = ? AND incomerange <> ''",
                     [req.body.income],
                     function (err, userResult, fields) {
                         if (err) reject(err);
@@ -1566,7 +1571,7 @@ async function executeQueries(req, res) {
         promises.push(
             new Promise((resolve, reject) => {
                 connection.query(
-                    "SELECT `userId` FROM `user_additional_details_master` WHERE houseType = ?",
+                    "SELECT `userId` FROM `user_additional_details_master` WHERE houseType = ? AND houseType <> ''",
                     [h],
                     function (err, userResult, fields) {
                         if (err) reject(err);
@@ -1607,7 +1612,7 @@ async function executeQueries(req, res) {
         promises.push(
             new Promise((resolve, reject) => {
                 connection.query(
-                    "SELECT `userId` FROM `user_additional_details_master` WHERE foodType = ?",
+                    "SELECT `userId` FROM `user_additional_details_master` WHERE foodType = ? AND foodType <> ''",
                     [h],
                     function (err, userResult, fields) {
                         if (err) reject(err);
@@ -1646,7 +1651,7 @@ async function executeQueries(req, res) {
         promises.push(
             new Promise((resolve, reject) => {
                 connection.query(
-                    "SELECT `userId` FROM `user_medical_details_master` WHERE (alcoholic = ? OR smoking = ? )",
+                    "SELECT `userId` FROM `user_medical_details_master` WHERE (alcoholic = ? OR smoking = ? ) AND alcoholic <> '' AND smoking <> ''",
                     [req.body.alcoholic, req.body.smoking],
                     function (err, userResult, fields) {
                         if (err) reject(err);
@@ -1687,7 +1692,7 @@ async function executeQueries(req, res) {
         promises.push(
             new Promise((resolve, reject) => {
                 connection.query(
-                    "SELECT `userId` FROM `user_medical_details_master` WHERE medicalHistory IN (?)",
+                    "SELECT `userId` FROM `user_medical_details_master` WHERE medicalHistory IN (?) AND medicalHistory <> ''",
                     [m],
                     function (err, userResult, fields) {
                         if (err) reject(err);
@@ -1930,53 +1935,35 @@ async function executeUpdateQueries(req, res, user) {
 
         promises.push(
             new Promise((resolve, reject) => {
-                if ("userId" in educationalDetails && educationalDetails.userId != null && educationalDetails.userId != "" && educationalDetails.userId != undefined) {
-                    console.log("Records present in educational, now updating");
-                    var sql =
-                        "UPDATE `user_educational_details_master` SET educationType=?, qualification=?, stream=?, qualifiedFrom=?, updatedBy=? WHERE userId=?";
-                    var values = [
-                        common.isNullOrEmptyOrUndefined(educationalDetails.educationType) ? "" : educationalDetails.educationType,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.qualification) ? "" : educationalDetails.qualification,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.stream) ? "" : educationalDetails.stream,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.qualifiedFrom) ? "" : educationalDetails.qualifiedFrom,
-                        educationalDetails.userId,
-                        educationalDetails.userId,
-                    ];
+                connection.query("UPDATE user_educational_details_master SET enabled='0' WHERE userId=?", [user.id], function (err, result) {
+                    if (err) reject(err);
+                    else {
+                        educationalDetails.forEach(data => {
+                            var sql =
+                                "INSERT INTO `user_educational_details_master` (userId, educationType, qualification, stream, qualifiedFrom, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                            var values = [
+                                user.id,
+                                common.isNullOrEmptyOrUndefined(data.educationType) ? "" : data.educationType,
+                                common.isNullOrEmptyOrUndefined(data.qualification) ? "" : data.qualification,
+                                common.isNullOrEmptyOrUndefined(data.stream) ? "" : data.stream,
+                                common.isNullOrEmptyOrUndefined(data.qualifiedFrom) ? "" : data.qualifiedFrom,
+                                user.id,
+                                user.id,
+                            ];
 
-                    connection.query(sql, values, function (err, result) {
-                        if (err) reject(err);
-                        else {
-                            console.log("Number of records updated: " + result.affectedRows);
+                            connection.query(sql, values, function (err, result) {
+                                if (err) reject(err);
+                                else {
+                                    console.log("Record inserted in educational");
 
-                            educationalDetails.id = result.insertId;
-                            response.educationalDetails = educationalDetails;
-                        }
+                                    data.id = result.insertId;
+                                }
+                            });
+                        });
+                        response.educationalDetails = educationalDetails;
                         resolve();
-                    });
-                } else {
-                    var sql =
-                        "INSERT INTO `user_educational_details_master` (userId, educationType, qualification, stream, qualifiedFrom, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
-                    var values = [
-                        user.id,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.educationType) ? "" : educationalDetails.educationType,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.qualification) ? "" : educationalDetails.qualification,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.stream) ? "" : educationalDetails.stream,
-                        common.isNullOrEmptyOrUndefined(educationalDetails.qualifiedFrom) ? "" : educationalDetails.qualifiedFrom,
-                        user.id,
-                        user.id,
-                    ];
-
-                    connection.query(sql, values, function (err, result) {
-                        if (err) reject(err);
-                        else {
-                            console.log("Record inserted in educational");
-
-                            educationalDetails.id = result.insertId;
-                            response.educationalDetails = educationalDetails;
-                        }
-                        resolve();
-                    });
-                }
+                    }
+                });
             })
         );
     }
@@ -2348,7 +2335,7 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                     else if (result.length > 0) {
                         console.log("Number of records from educational: " + result.length);
 
-                        responseData.educationalDetails = result[0];
+                        responseData.educationalDetails = result;   
                     }
 
                     resolve();

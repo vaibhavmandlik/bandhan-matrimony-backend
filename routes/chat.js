@@ -2,6 +2,7 @@ var express = require("express");
 var connection = require("./connection");
 var router = express.Router();
 var notification = require("../services/notification");
+var common = require("./common");
 
 router.post("/", function (req, res, next) {
   const user = req.body;
@@ -53,6 +54,7 @@ router.post("/", function (req, res, next) {
                 };
 
                 notification.send(message);
+                common.addNotification(user.toId, message.notification.body, JSON.stringify(message.data));
               }
             });
           }
