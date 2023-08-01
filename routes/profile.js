@@ -2105,12 +2105,10 @@ async function executeUpdateQueries(req, res, user) {
                 if ("userId" in personalDetails && personalDetails.userId != null && personalDetails.userId != "" && personalDetails.userId != undefined) {
                     console.log("Records present in personal, now updating");
                     var sql =
-                        "UPDATE `user_personal_details_master` SET gender=?, primaryPhoneNumber=?, secondaryPhoneNumber=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
+                        "UPDATE `user_personal_details_master` SET gender=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, updatedBy=? WHERE userId=?";
                     "userId, ";
                     var values = [
                         common.isNullOrEmptyOrUndefined(personalDetails.gender) ? "" : personalDetails.gender,
-                        common.isNullOrEmptyOrUndefined(personalDetails.primaryPhoneNumber) ? "" : personalDetails.primaryPhoneNumber,
-                        common.isNullOrEmptyOrUndefined(personalDetails.secondaryPhoneNumber) ? "" : personalDetails.secondaryPhoneNumber,
                         common.isNullOrEmptyOrUndefined(personalDetails.managedBy) ? "" : String(personalDetails.managedBy),
                         common.isNullOrEmptyOrUndefined(personalDetails.bio) ? "" : personalDetails.bio,
                         common.isNullOrEmptyOrUndefined(personalDetails.marriageType) ? "" : personalDetails.marriageType,

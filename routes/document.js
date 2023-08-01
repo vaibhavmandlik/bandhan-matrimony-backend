@@ -92,4 +92,20 @@ router.get("/", function (req, res, next) {
     });
 });
 
+router.get('/lsitContents', function (req, res, next) {
+    // simple query
+    connection.query(
+      'SELECT * FROM `dropdown_list_master`',
+      function (err, results, fields) {
+        console.log(results);
+  
+        res
+          .status(200)
+          .json({
+            success: true,
+            data: results,
+          });
+      });
+  });
+
 module.exports = router;
