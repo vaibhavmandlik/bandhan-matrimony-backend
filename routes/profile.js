@@ -2438,7 +2438,7 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
         })
     );
 
-    if (userId != visitorId)
+    if (String(userId) != visitorId)
         // Add entry to visitor table
         promises.push(
             new Promise((resolve, reject) => {
