@@ -1161,7 +1161,7 @@ async function executeQueries(req, res) {
         );
     }
 
-    
+
     if ("location" in req.body) {
         if (req.body.locations != "" || req.body.locations != null || req.body.locations != undefined) {
             let locations = req.body.location.split(",");
@@ -1825,7 +1825,7 @@ async function executeUpdateQueries(req, res, user) {
                         additionalDetails.userId
                     ];
 
-                    let query = connection.query(sql, values, function (err, result) {
+                    connection.query(sql, values, function (err, result) {
                         if (err) reject(err);
                         else {
                             console.log("Number of records updated in additional: " + result.affectedRows);
@@ -1835,8 +1835,6 @@ async function executeUpdateQueries(req, res, user) {
                         }
                         resolve();
                     });
-
-                    console.log(query);
                 } else {
                     var sql =
                         "INSERT INTO `user_additional_details_master` (userId, hobbies, foodType, houseType, languages, preferences, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -1933,39 +1931,38 @@ async function executeUpdateQueries(req, res, user) {
     if ("educationalDetails" in user) {
         var educationalDetails = user.educationalDetails;
 
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query("UPDATE user_educational_details_master SET enabled='0' WHERE userId=?", [user.id], function (err, result) {
-                    if (err) reject(err);
-                    else {
-                        educationalDetails.forEach(data => {
-                            var sql =
-                                "INSERT INTO `user_educational_details_master` (userId, educationType, qualification, stream, qualifiedFrom, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?)";
-                            var values = [
-                                user.id,
-                                common.isNullOrEmptyOrUndefined(data.educationType) ? "" : data.educationType,
-                                common.isNullOrEmptyOrUndefined(data.qualification) ? "" : data.qualification,
-                                common.isNullOrEmptyOrUndefined(data.stream) ? "" : data.stream,
-                                common.isNullOrEmptyOrUndefined(data.qualifiedFrom) ? "" : data.qualifiedFrom,
-                                user.id,
-                                user.id,
-                            ];
+        if (Array.isArray(educationalDetails) && educationalDetails.length > 0)
+            promises.push(
+                new Promise((resolve, reject) => {
+                    connection.query("UPDATE user_educational_details_master SET enabled='0' WHERE userId=?", [user.id], function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            educationalDetails.forEach(data => {
+                                var sql =
+                                    "INSERT INTO `user_educational_details_master` (userId, qualification, qualifiedFrom, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?)";
+                                var values = [
+                                    user.id,
+                                    common.isNullOrEmptyOrUndefined(data.qualification) ? "" : data.qualification,
+                                    common.isNullOrEmptyOrUndefined(data.qualifiedFrom) ? "" : data.qualifiedFrom,
+                                    user.id,
+                                    user.id,
+                                ];
 
-                            connection.query(sql, values, function (err, result) {
-                                if (err) reject(err);
-                                else {
-                                    console.log("Record inserted in educational");
+                                connection.query(sql, values, function (err, result) {
+                                    if (err) reject(err);
+                                    else {
+                                        console.log("Record inserted in educational");
 
-                                    data.id = result.insertId;
-                                }
+                                        data.id = result.insertId;
+                                    }
+                                });
                             });
-                        });
-                        response.educationalDetails = educationalDetails;
-                        resolve();
-                    }
-                });
-            })
-        );
+                            response.educationalDetails = educationalDetails;
+                            resolve();
+                        }
+                    });
+                })
+            );
     }
 
     if ("kundaliDetails" in user) {
@@ -2333,7 +2330,7 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                     else if (result.length > 0) {
                         console.log("Number of records from educational: " + result.length);
 
-                        responseData.educationalDetails = result;   
+                        responseData.educationalDetails = result;
                     }
 
                     resolve();
