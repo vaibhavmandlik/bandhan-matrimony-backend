@@ -1,6 +1,8 @@
 var express = require('express');
 var connection = require('./connection');
 var router = express.Router();
+var common = require("./common");
+
 
 router.post('/update', function (req, res, next) {
 
@@ -110,27 +112,6 @@ router.post('/verify', function (req, res, next) {
           error: "Username not found",
         });
   });
-});
-
-router.get('/delete', function (req, res, next) {
-
-  const id = req.query.id;
-
-  // simple query
-  connection.query(
-    'UPDATE `jobs` SET enabled="0" WHERE id=' + id,
-    function (err, results, fields) {
-      console.log(results);
-
-      if (results.affectedRows == 1) {
-        res
-          .status(200)
-          .json({
-            success: true,
-            data: "Deleted Successfully",
-          });
-      }
-    });
 });
 
 router.post('/addUser', function (req, res, next) {
@@ -348,5 +329,148 @@ router.get('/notification', function (req, res, next) {
         });
     });
 });
+
+router.get('/phoneNumber', function (req, res, next) {
+
+  const id = req.query.userId;
+
+  // simple query
+  connection.query(
+    'SELECT * FROM user_phone_number_master WHERE userId=? AND enabled = "1"', [id],
+    function (err, results, fields) {
+      console.log(results);
+      if (err) {
+        console.log(err);
+
+        return res
+          .status(500)
+          .json({
+            success: false,
+            status: err.message,
+          });
+      }
+
+      if (results.length > 0) {
+
+        return res
+          .status(200)
+          .json({
+            success: true,
+            data: results,
+          });
+      }
+      if (results.length == 0) {
+        return res
+          .status(500)
+          .json({
+            success: true,
+            data: [],
+          });
+      }
+    });
+});
+
+router.get('/preferences', function (req, res, next) {
+
+  const userId = req.query.userId;
+  // simple query
+  connection.query(
+    'SELECT * FROM `user_preference_master` WHERE userId=' + userId,
+    function (err, results, fields) {
+      console.log(results);
+      if (err) {
+        console.log(err);
+
+        return res
+          .status(500)
+          .json({
+            success: false,
+            status: err.message,
+          });
+      }
+
+      return res
+        .status(200)
+        .json({
+          success: true,
+          data: results,
+        });
+    });
+});
+
+router.put('/preferences', function (req, res, next) {
+  user = req.body
+  connection.query("SELECT * FROM user_preference_master WHERE userId=?", [user.userId], function (err, result) {
+    if (err) {
+      console.log(err);
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          status: err.message,
+        });
+    }
+    if (result.length > 0) {
+      connection.query("UPDATE user_preference_master SET preference=? WHERE userId=?", [user.preference, user.userId], function (err, result) {
+        if (err) {
+          console.log(err);
+
+          return res
+            .status(500)
+            .json({
+              success: false,
+              status: err.message,
+            });
+        }
+        else {
+          console.log("Record Updated in Preferance");
+
+          return res
+            .status(200)
+            .json({
+              success: true,
+              data: result,
+            });
+        }
+
+      });
+    }
+    else {
+      var sql =
+        "INSERT INTO `user_preference_master` (userId, preference, createdBy, updatedBy) VALUES (?, ?, ?, ?)";
+      var values = [
+        user.userId,
+        common.isNullOrEmptyOrUndefined(user.preference) ? "" : user.preference,
+        user.userId,
+        user.userId,
+      ];
+      connection.query(sql, values, function (err, result) {
+        if (err) {
+          console.log(err);
+
+          return res
+            .status(500)
+            .json({
+              success: false,
+              status: err.message,
+            });
+        }
+        else {
+          console.log("Record inserted in Preferance");
+
+          return res
+            .status(200)
+            .json({
+              success: true,
+              data: result,
+            });
+        }
+      });
+    }
+  });
+});
+
+
 
 module.exports = router;
