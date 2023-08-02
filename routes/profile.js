@@ -1042,10 +1042,16 @@ router.post("/filter", function (req, res, next) {
 
                     Promise.all(queries)
                         .then(() => {
-                            return res.status(200).json({
-                                success: true,
-                                data: fileterResponse,
-                            });
+                            if (fileterResponse.length > 0)
+                                return res.status(200).json({
+                                    success: true,
+                                    data: fileterResponse,
+                                });
+                            else
+                                return res.status(200).json({
+                                    success: true,
+                                    data: Array(fileterResponse),
+                                });
                         })
                         .catch((err) => {
                             return res.status(400).json({
