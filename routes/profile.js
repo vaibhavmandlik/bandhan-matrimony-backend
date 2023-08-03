@@ -493,6 +493,7 @@ router.get("/", function (req, res, next) {
                                 response.userCode = userData.userCode;
                                 response.firstName = userData.firstName;
                                 response.lastName = userData.lastName;
+                                response.email = userData.email;
 
                                 if (interestResult.length == 1)
                                     response.isConnected = true;
