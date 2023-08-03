@@ -46,7 +46,7 @@ router.post('/', function (req, res, next) {
                 userToken.userCode = element.userCode;
                 userToken.gender = element.gender;
 
-                let profilePhoto = common.isNotNullOrEmptyOrUndefined(element.docPath) ? String(element.docPath).split("uploads\\")[1] : "";
+                let profilePhoto = common.isNotNullOrEmptyOrUndefined(element.docPath) ? String(element.docPath).split("uploads\\")[1] : null;
 
                 let token;
                 try {
