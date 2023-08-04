@@ -1403,17 +1403,17 @@ async function executeQueries(req, res) {
         }
     }
 
-    if ("bornAfter" in req.body) {
+    if ("fromAge" in req.body) {
         if (
-            req.body.bornAfter != "" ||
-            req.body.bornAfter != null ||
-            req.body.bornAfter != undefined
+            req.body.fromAge != "" ||
+            req.body.fromAge != null ||
+            req.body.fromAge != undefined
         ) {
             promises.push(
                 new Promise((resolve, reject) => {
                     connection.query(
-                        "SELECT `userId` FROM `user_basic_details_master` WHERE YEAR(`dateOfBirth`) >= ? AND dateOfBirth <> ''",
-                        [req.body.bornAfter],
+                        "SELECT `userId`, (DATEDIFF(SYSDATE(), dateOfBirth)/365) AS age FROM `user_basic_details_master` WHERE ((DATEDIFF(SYSDATE(), dateOfBirth)/365) >= ? AND (DATEDIFF(SYSDATE(), dateOfBirth)/365) <= ?) AND dateOfBirth <> ''",
+                        [(req.body.fromAge + 17), (req.body.toAge + 17)],
                         function (err, userResult, fields) {
                             if (err) reject(err);
                             else if (userResult.length > 0) {
