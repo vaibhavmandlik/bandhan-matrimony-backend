@@ -330,46 +330,6 @@ router.get('/notification', function (req, res, next) {
     });
 });
 
-router.get('/phoneNumber', function (req, res, next) {
-
-  const id = req.query.userId;
-
-  // simple query
-  connection.query(
-    'SELECT * FROM user_phone_number_master WHERE userId=? AND enabled = "1"', [id],
-    function (err, results, fields) {
-      console.log(results);
-      if (err) {
-        console.log(err);
-
-        return res
-          .status(500)
-          .json({
-            success: false,
-            status: err.message,
-          });
-      }
-
-      if (results.length > 0) {
-
-        return res
-          .status(200)
-          .json({
-            success: true,
-            data: results,
-          });
-      }
-      if (results.length == 0) {
-        return res
-          .status(500)
-          .json({
-            success: true,
-            data: [],
-          });
-      }
-    });
-});
-
 router.get('/preferences', function (req, res, next) {
 
   const userId = req.query.userId;
