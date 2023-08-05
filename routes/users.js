@@ -471,6 +471,4 @@ router.put('/preferences', function (req, res, next) {
   });
 });
 
-
-
 module.exports = router;

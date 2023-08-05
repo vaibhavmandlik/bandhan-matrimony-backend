@@ -2226,6 +2226,45 @@ async function executeUpdateQueries(req, res, user) {
         );
     }
 
+    if ("contactDetails" in user) {
+        var contactDetails = user.contactDetails;
+
+        if (Array.isArray(contactDetails) && contactDetails.length > 0)
+            promises.push(
+                new Promise((resolve, reject) => {
+                    connection.query("UPDATE user_contact_master SET enabled='0' WHERE userId=?", [user.id], function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            contactDetails.forEach(data => {
+                                if (common.isNotNullOrEmptyOrUndefined(data)) {
+                                    var sql =
+                                        "INSERT INTO `user_contact_master` (userId, contactNumber, isPrimary, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?)";
+                                    var values = [
+                                        user.id,
+                                        common.isNullOrEmptyOrUndefined(data.contact) ? "" : data.contact,
+                                        common.isNullOrEmptyOrUndefined(data.isPrimary) ? "0" : "1",
+                                        user.id,
+                                        user.id,
+                                    ];
+
+                                    connection.query(sql, values, function (err, result) {
+                                        if (err) reject(err);
+                                        else {
+                                            console.log("Record inserted in contact master");
+
+                                            data.id = result.insertId;
+                                        }
+                                    });
+                                }
+                            });
+                            response.contactDetails = contactDetails;
+                            resolve();
+                        }
+                    });
+                })
+            );
+    }
+
     try {
         if (promises.length > 0) {
             await Promise.all(promises);
@@ -2439,6 +2478,25 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                         );
 
                         responseData.professionalDetails = result[0];
+                    }
+
+                    resolve();
+                }
+            );
+        })
+    );
+
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT * FROM user_contact_master `users` WHERE enabled='1' AND userId=?",
+                [userId],
+                function (err, result) {
+                    if (err) reject(err);
+                    else if (result.length > 0) {
+                        console.log("Number of records from educational: " + result.length);
+
+                        responseData.contactDetails = result;
                     }
 
                     resolve();
