@@ -52,7 +52,17 @@ async function saveUserData(res, result, user) {
   const promises = [];
 
   promises.push(new Promise((resolve, reject) => {
-    connection.query("INSERT INTO user_personal_details_master (userId, gender, primaryPhoneNumber) VALUES (?, ?, ?)", [result.insertId, user.personalDetails.gender, user.personalDetails.primaryPhoneNumber], function (err, result) {
+    connection.query("INSERT INTO user_personal_details_master (userId, gender) VALUES (?, ?)", [result.insertId, user.personalDetails.gender], function (err, result) {
+      if (err) reject(err);
+
+      console.log("Number of records inserted: " + result.affectedRows);
+
+      resolve();
+    });
+  }));
+
+  promises.push(new Promise((resolve, reject) => {
+    connection.query("INSERT INTO user_contact_master (userId, contactNumber, isPrimary) VALUES (?, ?, ?)", [result.insertId, user.contactDetails.contactNumber, user.contactDetails.isPrimary], function (err, result) {
       if (err) reject(err);
 
       console.log("Number of records inserted: " + result.affectedRows);
