@@ -188,28 +188,6 @@ router.delete("/", function (req, res, next) {
 });
 
 router.put("/", function (req, res, next) {
-    var response = {
-        error: {
-            basicDetails: "",
-            additionalDetails: "",
-            addressDetails: "",
-            educationalDetails: "",
-            kundaliDetails: "",
-            medicalDetails: "",
-            personalDetails: "",
-            personalDocument: "",
-            professionalDetails: "",
-        },
-        basicDetails: {},
-        additionalDetails: {},
-        addressDetails: {},
-        educationalDetails: {},
-        kundaliDetails: {},
-        medicalDetails: {},
-        personalDetails: {},
-        personalDocument: {},
-        professionalDetails: {},
-    };
     var user = req.body;
 
     executeUpdateQueries(req, res, user);
@@ -1894,7 +1872,7 @@ async function executeUpdateQueries(req, res, user) {
                 if ("userId" in personalDetails && personalDetails.userId != null && personalDetails.userId != "" && personalDetails.userId != undefined) {
                     console.log("Records present in personal, now updating");
                     var sql =
-                        "UPDATE `user_personal_details_master` SET gender=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, spiritualGuru=? updatedBy=? WHERE userId=?";
+                        "UPDATE `user_personal_details_master` SET gender=?, managedBy=?, bio=?, marriageType=?, motherTongue=?, familyType=?, familyBio=?, spiritualGuru=?, updatedBy=? WHERE userId=?";
                     "userId, ";
                     var values = [
                         common.isNullOrEmptyOrUndefined(personalDetails.gender) ? "" : personalDetails.gender,
