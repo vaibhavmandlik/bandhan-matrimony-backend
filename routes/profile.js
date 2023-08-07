@@ -1816,16 +1816,16 @@ async function executeUpdateQueries(req, res, user) {
                         "UPDATE `user_medical_details_master` SET isSpectacles=?, alcoholic=?, smoking=?, medicalHistory=?, isInsured=?, updatedBy=? WHERE userId=?";
                     "";
                     var values = [
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.isSpectacles) ? "" : medicalDetails.isSpectacles,
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.alcoholic) ? "" : medicalDetails.alcoholic,
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.smoking) ? "" : medicalDetails.smoking,
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.medicalHistory) ? "" : medicalDetails.medicalHistory,
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.isInsured) ? "" : medicalDetails.isInsured,
+                        common.isNullOrEmptyOrUndefined(medicalDetails.isSpectacles) ? "" : medicalDetails.isSpectacles,
+                        common.isNullOrEmptyOrUndefined(medicalDetails.alcoholic) ? "" : medicalDetails.alcoholic,
+                        common.isNullOrEmptyOrUndefined(medicalDetails.smoking) ? "" : medicalDetails.smoking,
+                        common.isNullOrEmptyOrUndefined(medicalDetails.medicalHistory) ? "" : String(medicalDetails.medicalHistory),
+                        common.isNullOrEmptyOrUndefined(medicalDetails.isInsured) ? "" : medicalDetails.isInsured,
                         medicalDetails.userId,
                         medicalDetails.userId,
                     ];
 
-                    connection.query(sql, values, function (err, result) {
+                    let db = connection.query(sql, values, function (err, result) {
                         if (err) reject(err);
                         else {
                             console.log("Number of records updated: " + result.affectedRows);
@@ -1835,16 +1835,18 @@ async function executeUpdateQueries(req, res, user) {
                         }
                         resolve();
                     });
+
+                    console.log(db.sql);
                 } else {
                     var sql =
                         "INSERT INTO `user_medical_details_master` (userId, isSpectacles, alcoholic, smoking, medicalHistory, isInsured, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.isSpectacles) ? "" : medicalDetails.isSpectacles,
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.alcoholic) ? "" : medicalDetails.alcoholic,
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.smoking) ? "" : medicalDetails.smoking,
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.medicalHistory) ? "" : medicalDetails.medicalHistory,
-                        common.isNotNullOrEmptyOrUndefined(medicalDetails.isInsured) ? "" : medicalDetails.isInsured,
+                        common.isNullOrEmptyOrUndefined(medicalDetails.isSpectacles) ? "" : medicalDetails.isSpectacles,
+                        common.isNullOrEmptyOrUndefined(medicalDetails.alcoholic) ? "" : medicalDetails.alcoholic,
+                        common.isNullOrEmptyOrUndefined(medicalDetails.smoking) ? "" : medicalDetails.smoking,
+                        common.isNullOrEmptyOrUndefined(medicalDetails.medicalHistory) ? "" : medicalDetails.medicalHistory,
+                        common.isNullOrEmptyOrUndefined(medicalDetails.isInsured) ? "" : medicalDetails.isInsured,
                         user.id,
                         user.id,
                     ];

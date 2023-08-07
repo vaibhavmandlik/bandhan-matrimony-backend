@@ -54,7 +54,7 @@ router.post('/upload', async function (req, res, next) {
                                 .json({
                                     success: true,
                                     data: {
-                                        path: "/uploads/" + imagePath
+                                        path: imagePath.replace("uploads\\", "")
                                     }
                                 });
                         });
