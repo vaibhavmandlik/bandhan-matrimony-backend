@@ -1,131 +1,174 @@
-const express = require('express');
+const express = require("express");
 const jwt = require("jsonwebtoken");
+var common = require("./common");
 var router = express.Router();
+var connection = require("./connection");
 
-var connection = require('./connection')
-
-router.post('/', function (req, res, next) {
-
+router.post("/", function (req, res, next) {
   const user = req.body;
 
   connection.query(
-    'SELECT * FROM `users` WHERE username=?', [user.username],
-    function (err, results, fields) {
+    "SELECT * FROM `users` WHERE username=?",
+    [user.email],
+    function (err, results) {
+      if (err)
+        return res.status(500).json({
+          success: false,
+          status: err.message,
+        });
+
       if (results.length > 0)
-        return res
-          .status(200)
-          .json({
-            success: false,
-            error: "User already exists",
-          });
+        return res.status(200).json({
+          success: false,
+          status: "User already exists",
+        });
 
       var user = req.body;
-      var sql = `INSERT INTO users (name, username, password, email) VALUES (?, ?, ?, ?)`;
-      var values = [user.name, user.username, user.password, user.email];
+      var sql = `INSERT INTO users (firstName, lastName, username, password, email) VALUES (?, ?, ?, ?, ?)`;
+      var values = [
+        user.firstName,
+        user.lastName,
+        user.email,
+        user.password,
+        user.email,
+      ];
 
       connection.query(sql, values, async function (err, result) {
         if (err) {
-          return res
-            .status(200)
-            .json({
-              success: false,
-              error: "Something went wrong: " + err,
-            })
+          return res.status(500).json({
+            success: false,
+            status: err.message,
+          });
         }
 
         console.log("Number of records inserted: " + result.affectedRows);
-
-        var userCode;
-        isUserCodeVerified = false;
-
-        while (!isUserCodeVerified) {
-          userCode = userCodeGenerator();
-          isUserCodeVerified = await verifyUserCode(userCode);
-        }
-
-        var sql = `UPDATE users SET userCode=?, createdBy=?, updatedBy=? WHERE id=?`;
-        var values = [userCode, result.insertId, result.insertId, result.insertId];
-
-        connection.query(sql, values, function (err, results, fields) {
-          if (err) {
-            return res
-              .status(200)
-              .json({
-                success: false,
-                error: "Something went wrong: " + err,
-              });
-          }
-
-          if (results.affectedRows > 0) {
-            const userToken = {};
-            userToken.id = result.insertId;
-            userToken.username = user.username;
-            userToken.userCode = userCode;
-            userToken.email = user.email;
-
-            let token;
-
-            try {
-              //Creating jwt token
-              token = jwt.sign(
-                { userId: user.id, userData: userToken },
-                "venture",
-                { expiresIn: "1h" }
-              );
-            } catch (err) {
-              console.log(err);
-              const error = new Error("Error! Something went wrong.");
-              return next(error);
-            }
-
-            res
-              .status(200)
-              .json({
-                success: true,
-                data: {
-                  data: userToken,
-                  token: token,
-                },
-              });
-          } else
-            return res
-              .status(200)
-              .json({
-                success: false,
-                error: "Something went wrong",
-              });
-        });
+        saveUserData(res, result, user);
       });
-
-    });
+    }
+  );
 });
 
-function userCodeGenerator() {
-  var chars = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-    serialLength = 5,
-    randomSerial = "",
-    i,
-    randomNumber;
+async function saveUserData(res, result, user) {
+  const promises = [];
 
-  for (i = 0; i < serialLength; i = i + 1) {
-    randomNumber = Math.floor(Math.random() * chars.length);
-    randomSerial += chars.substring(randomNumber, randomNumber + 1);
+  promises.push(new Promise((resolve, reject) => {
+    connection.query("INSERT INTO user_personal_details_master (userId, gender) VALUES (?, ?)", [result.insertId, user.personalDetails.gender], function (err, result) {
+      if (err) reject(err);
+
+      console.log("Number of records inserted: " + result.affectedRows);
+
+      resolve();
+    });
+  }));
+
+  promises.push(new Promise((resolve, reject) => {
+    connection.query("INSERT INTO user_contact_master (userId, contactNumber, isPrimary) VALUES (?, ?, ?)", [result.insertId, user.contactDetails.contactNumber, user.contactDetails.isPrimary], function (err, result) {
+      if (err) reject(err);
+
+      console.log("Number of records inserted: " + result.affectedRows);
+
+      resolve();
+    });
+  }));
+
+  promises.push(new Promise((resolve, reject) => {
+    connection.query("INSERT INTO user_basic_details_master (userId, dateOfBirth) VALUES (?, ?)", [result.insertId, formatDate(user.basicDetails.dateOfBirth)], function (err, result) {
+      if (err) reject(err);
+
+      console.log("Number of records inserted: " + result.affectedRows);
+
+      resolve();
+    });
+  }));
+
+  var userCode;
+  isUserCodeVerified = false;
+
+  while (!isUserCodeVerified) {
+    userCode = common.userCodeGenerator(
+      "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      5
+    );
+    isUserCodeVerified = await verifyUserCode(userCode);
   }
 
-  return randomSerial;
+  let token;
+  const userToken = {};
+
+  promises.push(new Promise((resolve, reject) => {
+    let refferCode = common.userCodeGenerator(
+      "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      5
+    );
+
+    connection.query("UPDATE users SET userCode=?, refferCode=?, createdBy=?, updatedBy=? WHERE id=?", [userCode, refferCode, result.insertId, result.insertId, result.insertId,], function (err, results, fields) {
+      if (err) reject(err);
+
+      if (results.affectedRows > 0) {
+        userToken.username = user.email;
+        userToken.id = result.insertId;
+        userToken.category = "1";
+        userToken.email = user.email;
+        userToken.name = user.firstName;
+        userToken.referCode = refferCode;
+        userToken.userCode = userCode;
+        userToken.profile = null;
+        userToken.gender = user.personalDetails.gender;
+
+        try {
+          //Creating jwt token
+          token = jwt.sign(userToken, "venture", { expiresIn: "1h" });
+
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      } else
+        reject({ message: "Something went wrong!" });
+    });
+  }));
+
+  try {
+    await Promise.all(promises);
+    res.status(200).json({
+      success: true,
+      data: {
+        userId: userToken.id,
+        token: token,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      status: err.message
+    });
+  }
 }
 
 function verifyUserCode(userCode) {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT COUNT(*) FROM users WHERE userCode=?`, [userCode],
+      `SELECT COUNT(*) FROM users WHERE userCode=?`,
+      [userCode],
       function (err, results, fields) {
-        if (results.length == 0)
-          reject(false);
+        if (results.length == 0) reject(false);
 
         resolve(true);
-      });
+      }
+    );
   });
+}
+
+function formatDate(date) {
+  var d = new Date(date),
+    month = "" + (d.getMonth() + 1),
+    day = "" + d.getDate(),
+    year = d.getFullYear();
+
+  if (month.length < 2) month = "0" + month;
+  if (day.length < 2) day = "0" + day;
+
+  return [year, month, day].join("-");
 }
 
 module.exports = router;

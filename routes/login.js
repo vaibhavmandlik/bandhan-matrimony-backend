@@ -1,8 +1,6 @@
 const express = require('express');
-const mysql = require('mysql2');
-const path = require('path');
 const jwt = require("jsonwebtoken");
-
+var common = require("./common");
 var router = express.Router();
 
 var connection = require('./connection')
@@ -13,20 +11,27 @@ router.post('/', function (req, res, next) {
 
     // simple query
     connection.query(
-        'SELECT * FROM `users` WHERE username=?', [user.username],
-        function (err, results, fields) {
-            console.log(results[0]);
+        'SELECT u.*, udm.docPath, upm.gender FROM `users` u LEFT JOIN user_document_details_master udm ON (u.id=udm.userId AND udm.enabled="1") LEFT JOIN user_personal_details_master upm ON u.id=upm.userId WHERE username=?', [user.username],
+        function (err, results) {
+            if (err)
+                return res
+                    .status(500)
+                    .json({
+                        success: false,
+                        status: err.message,
+                    });
+
             if (results.length == 0) {
                 return res
                     .status(200)
                     .json({
                         success: false,
-                        error: "User does not exists",
+                        status: "User does not exists",
                     });
             }
 
             if (results[0].password != user.password) {
-                return res.status(200).json({ success: false, error: "Incorrect password", });
+                return res.status(200).json({ success: false, status: "Incorrect password", });
             }
 
             results.forEach(element => {
@@ -36,13 +41,18 @@ router.post('/', function (req, res, next) {
                 userToken.id = element.id;
                 userToken.category = element.category;
                 userToken.email = element.email;
-                userToken.name = element.name;
+                userToken.name = element.firstName;
+                userToken.referCode = element.refferCode;
+                userToken.userCode = element.userCode;
+                userToken.gender = element.gender;
+
+                let profilePhoto = common.isNotNullOrEmptyOrUndefined(element.docPath) ? String(element.docPath).split("uploads\\")[1] : null;
 
                 let token;
                 try {
                     //Creating jwt token
                     token = jwt.sign(
-                        { userId: element.id, userData: userToken },
+                        userToken,
                         "venture",
                         { expiresIn: "1h" }
                     );
@@ -51,40 +61,20 @@ router.post('/', function (req, res, next) {
                     const error = new Error("Error! Something went wrong.");
                     return next(error);
                 }
-
-                sql = 'SELECT `users`.`twoFactAuth` FROM `users` WHERE `users`.`id`=?';
-                values = [userToken.id];
-
-                connection.query(sql, values, function (err, factResult) {
-                    if (err) {
-                        return res
-                            .status(200)
-                            .json({
-                                success: false,
-                                error: "Something went wrong: " + err,
-                            });
-                    }
-                    console.log("Fetched records: " + factResult.length);
-
-                    if (factResult[0].twoFactAuth) {
-                        
-                    }
-                    else {
-                        res
-                            .status(200)
-                            .json({
-                                success: true,
-                                data: {
-                                    userId: element.id,
-                                    token: token,
-                                },
-                            });
-                    }
-                });
+                
+                return res
+                    .status(200)
+                    .json({
+                        success: true,
+                        data: {
+                            userId: element.id,
+                            profilePhoto: profilePhoto,
+                            token: token,
+                        },
+                    });
             });
         }
     );
-
 });
 
 module.exports = router;
