@@ -395,10 +395,14 @@ router.get("/interest", function (req, res, next) {
         new Promise((resolve, reject) => {
             // Query for interest request sent
             connection.query(
-                'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE `enabled`="1" AND `userId`=? GROUP BY `interestedInId`',
+                'SELECT `interestedInId`, MAX(`isAccepted`) AS `maxIsAccepted`, MAX(`id`) AS `maxId` FROM `user_interest_details_master` WHERE `enabled`="1" AND `userId`=? GROUP BY `interestedInId`;',
                 [user],
                 function (err, result, fields) {
-                    if (err) reject(err);
+                    console.log(result);
+                    if (err) {
+                        console.log(err);
+                        reject(err);
+                    }
                     else if (result.length > 0) {
                         let sentIds = [];
                         result.forEach((element) => {
@@ -410,6 +414,7 @@ router.get("/interest", function (req, res, next) {
                             [sentIds],
                             function (err, results, fields) {
                                 if (err) {
+                                    console.log(err);
                                     reject(err);
                                 }
 
@@ -440,10 +445,13 @@ router.get("/interest", function (req, res, next) {
         new Promise((resolve, reject) => {
             // Query for interest request received
             connection.query(
-                'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE `enabled`="1" AND `interestedInId`=? GROUP BY `userId`',
+                'SELECT `userId`, MAX(`isAccepted`) AS `isAccepted`, MAX(`id`) AS `id` FROM `user_interest_details_master` WHERE `enabled`="1" AND `interestedInId`=? GROUP BY `userId`',
                 [user],
                 function (err, result, fields) {
-                    if (err) reject(err);
+                    if (err) {
+                        console.log(err);
+                        reject(err);
+                    }
                     else if (result.length > 0) {
                         let received = [];
                         result.forEach((element) => {
@@ -455,7 +463,10 @@ router.get("/interest", function (req, res, next) {
                             "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `basic`.`dateOfBirth`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` WHERE `users`.`id` IN (?)",
                             [received],
                             function (err, results, fields) {
-                                if (err) reject(err);
+                                if (err) {
+                                    console.log(err);
+                                    reject(err);
+                                }
 
                                 results.map((m) => {
                                     let interestRequest = result.filter((a) => a.userId == m.id);
@@ -2123,7 +2134,7 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                     else if (result.length > 0) {
                         console.log("Number of records from educational: " + result.length);
 
-                        responseData.documentDetails = result;
+                        responseData.documentDetails = result[0];
                     }
 
                     resolve();
