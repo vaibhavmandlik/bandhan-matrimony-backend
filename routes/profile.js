@@ -460,7 +460,7 @@ router.get("/interest", function (req, res, next) {
                         });
 
                         connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `basic`.`dateOfBirth`, `address`.`city`, `kundali`.`caste`, `personal`.`gender`, (SELECT `docPath` FROM `user_document_details_master` WHERE `userId` = `users`.`id` AND `enabled` = '1' AND `docType` = '1' LIMIT 1) AS `docPath` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` AND `basic`.`enabled` = '1' LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` AND `address`.`enabled` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` AND `kundali`.`enabled` = '1' LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` AND `personal`.`enabled` = '1' WHERE `users`.`id` IN  (?) (?)",
+                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `basic`.`dateOfBirth`, `address`.`city`, `kundali`.`caste`, `personal`.`gender`, (SELECT `docPath` FROM `user_document_details_master` WHERE `userId` = `users`.`id` AND `enabled` = '1' AND `docType` = '1' LIMIT 1) AS `docPath` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` AND `basic`.`enabled` = '1' LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` AND `address`.`enabled` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` AND `kundali`.`enabled` = '1' LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` AND `personal`.`enabled` = '1' WHERE `users`.`id` IN  (?)",
                             [received],
                             function (err, results, fields) {
                                 if (err) {
@@ -1955,7 +1955,7 @@ async function executeUpdateQueries(req, res, user) {
                         "UPDATE `user_professional_details_master` SET incomeType=?, designation=?, jobLocation=?, incomeRange=?, updatedBy=? WHERE userId=?";
                     "";
                     var values = [
-                        common.isNullOrEmptyOrUndefined(professionalDetails.incomeType) ? "" : professionalDetails.incomeType,
+                        common.isNullOrEmptyOrUndefined(professionalDetails.incomeType) ? "1" : professionalDetails.incomeType,
                         common.isNullOrEmptyOrUndefined(professionalDetails.designation) ? "" : professionalDetails.designation,
                         common.isNullOrEmptyOrUndefined(professionalDetails.jobLocation) ? "" : professionalDetails.jobLocation,
                         common.isNullOrEmptyOrUndefined(professionalDetails.incomeRange) ? "" : professionalDetails.incomeRange,
