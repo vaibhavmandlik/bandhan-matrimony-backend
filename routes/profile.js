@@ -1210,51 +1210,51 @@ async function executeFilterQueries(req, res) {
         }
     }
 
-    if ("mangalik" in req.body) {
-        if (
-            req.body.mangalik != "" ||
-            req.body.mangalik != null ||
-            req.body.mangalik != undefined
-        ) {
-            promises.push(
-                new Promise((resolve, reject) => {
-                    connection.query(
-                        "SELECT `userId` FROM `user_kundali_details_master` WHERE manglik = ? AND manglik <> ''",
-                        [req.body.mangalik],
-                        function (err, userResult, fields) {
-                            if (err) reject(err);
-                            else if (userResult.length > 0) {
-                                let userId = [];
-                                userResult.forEach((element) => {
-                                    userId.push(element.userId);
-                                });
+    // if ("mangalik" in req.body) {
+    //     if (
+    //         req.body.mangalik != "" ||
+    //         req.body.mangalik != null ||
+    //         req.body.mangalik != undefined
+    //     ) {
+    //         promises.push(
+    //             new Promise((resolve, reject) => {
+    //                 connection.query(
+    //                     "SELECT `userId` FROM `user_kundali_details_master` WHERE manglik = ? AND manglik <> ''",
+    //                     [req.body.mangalik],
+    //                     function (err, userResult, fields) {
+    //                         if (err) reject(err);
+    //                         else if (userResult.length > 0) {
+    //                             let userId = [];
+    //                             userResult.forEach((element) => {
+    //                                 userId.push(element.userId);
+    //                             });
 
-                                connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` WHERE `users`.`id` IN (?)",
-                                    [userId],
-                                    function (err, results, fields) {
-                                        if (err) {
-                                            reject(err);
-                                        }
-                                        if (results.length > 0) {
-                                            responseData = checkDuplicateResponse(
-                                                results,
-                                                responseData
-                                            );
-                                        }
+    //                             connection.query(
+    //                                 "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` WHERE `users`.`id` IN (?)",
+    //                                 [userId],
+    //                                 function (err, results, fields) {
+    //                                     if (err) {
+    //                                         reject(err);
+    //                                     }
+    //                                     if (results.length > 0) {
+    //                                         responseData = checkDuplicateResponse(
+    //                                             results,
+    //                                             responseData
+    //                                         );
+    //                                     }
 
-                                        resolve();
-                                    }
-                                );
-                            } else {
-                                resolve();
-                            }
-                        }
-                    );
-                })
-            );
-        }
-    }
+    //                                     resolve();
+    //                                 }
+    //                             );
+    //                         } else {
+    //                             resolve();
+    //                         }
+    //                     }
+    //                 );
+    //             })
+    //         );
+    //     }
+    // }
 
     if ("graduation" in req.body || "postGraduation" in req.body) {
         promises.push(
@@ -1743,7 +1743,7 @@ async function executeUpdateQueries(req, res, user) {
                 if ("userId" in kundaliDetails && kundaliDetails.userId != null && kundaliDetails.userId != "" && kundaliDetails.userId != undefined) {
                     console.log("Records present in kundali, now updating");
                     var sql =
-                        "UPDATE `user_kundali_details_master` SET moonStar=?, moonSign=?, gan=?, gotra=?, naadi=?, religion=?, caste=?, subCaste=?, manglik=?, bloodGroup=?, updatedBy=? WHERE userId=?";
+                        "UPDATE `user_kundali_details_master` SET moonStar=?, moonSign=?, gan=?, gotra=?, naadi=?, religion=?, caste=?, subCaste=?, bloodGroup=?, updatedBy=? WHERE userId=?";
                     "";
                     var values = [
                         common.isNullOrEmptyOrUndefined(kundaliDetails.moonStar) ? "" : kundaliDetails.moonStar,
@@ -1754,7 +1754,7 @@ async function executeUpdateQueries(req, res, user) {
                         common.isNullOrEmptyOrUndefined(kundaliDetails.religion) ? "" : kundaliDetails.religion,
                         common.isNullOrEmptyOrUndefined(kundaliDetails.caste) ? "" : kundaliDetails.caste,
                         common.isNullOrEmptyOrUndefined(kundaliDetails.subCaste) ? "" : kundaliDetails.subCaste,
-                        common.isNullOrEmptyOrUndefined(kundaliDetails.manglik) ? "" : kundaliDetails.manglik,
+                        // common.isNullOrEmptyOrUndefined(kundaliDetails.manglik) ? "" : kundaliDetails.manglik,
                         common.isNullOrEmptyOrUndefined(kundaliDetails.bloodGroup) ? "" : kundaliDetails.bloodGroup,
                         kundaliDetails.userId,
                         kundaliDetails.userId,
