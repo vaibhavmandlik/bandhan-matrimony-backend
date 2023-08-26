@@ -2134,7 +2134,7 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                     else if (result.length > 0) {
                         console.log("Number of records from educational: " + result.length);
 
-                        responseData.documentDetails = result[0];
+                        responseData.documentDetails = result;
                     }
 
                     resolve();
