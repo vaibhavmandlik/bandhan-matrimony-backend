@@ -1901,7 +1901,7 @@ async function executeUpdateQueries(req, res, user) {
                     });
                 } else {
                     var sql =
-                        "INSERT INTO `user_personal_details_master` (userId, gender, primaryPhoneNumber, secondaryPhoneNumber, managedBy, bio, marriageType, motherTongue, familyType, familyBio, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        "INSERT INTO `user_personal_details_master` (userId, gender, primaryPhoneNumber, secondaryPhoneNumber, managedBy, bio, marriageType, motherTongue, familyType, familyBio, spiritualGuru, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     var values = [
                         user.id,
                         common.isNullOrEmptyOrUndefined(personalDetails.gender) ? "" : personalDetails.gender,
@@ -1913,6 +1913,7 @@ async function executeUpdateQueries(req, res, user) {
                         common.isNullOrEmptyOrUndefined(personalDetails.motherTongue) ? "" : personalDetails.motherTongue,
                         common.isNullOrEmptyOrUndefined(personalDetails.familyType) ? "" : personalDetails.familyType,
                         common.isNullOrEmptyOrUndefined(personalDetails.familyBio) ? "" : personalDetails.familyBio,
+                        common.isNullOrEmptyOrUndefined(personalDetails.spiritualGuru) ? "" : personalDetails.spiritualGuru,
                         user.id,
                         user.id,
                     ];
