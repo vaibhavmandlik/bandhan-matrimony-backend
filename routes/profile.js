@@ -746,83 +746,25 @@ router.post("/filter", function (req, res, next) {
                     });
 
                 if (userResult.length > 0) {
-                    let fileterResponse = {
-                        error: {
-                            basicDetails: "",
-                            additionalDetails: "",
-                            addressDetails: "",
-                            educationalDetails: "",
-                            kundaliDetails: "",
-                            medicalDetails: "",
-                            personalDetails: "",
-                            personalDocument: "",
-                            professionalDetails: "",
-                        },
-                        basicDetails: {},
-                        additionalDetails: {},
-                        addressDetails: {},
-                        educationalDetails: {},
-                        kundaliDetails: {},
-                        medicalDetails: {},
-                        personalDetails: {},
-                        personalDocument: {},
-                        professionalDetails: {},
-                    };
+                    connection.query(
+                        "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` WHERE `users`.`id` IN (?)",
+                        [userResult[0].id],
+                        function (err, results, fields) {
+                            if (err) {
+                                return res.status(500).json({
+                                    success: false,
+                                    status: err.message,
+                                });
+                            }
 
-                    let queries = [
-                        "basic",
-                        "additional",
-                        "address",
-                        "educational",
-                        "kundali",
-                        "medical",
-                        "personal",
-                        "professional",
-                    ].map((table) => {
-                        return new Promise((resolve, reject) => {
-                            connection.query(
-                                "SELECT * FROM `user_" +
-                                table +
-                                '_details_master` WHERE enabled="1" AND `userId`=?',
-                                [userResult[0].id],
-                                function (err, additionalDetailsResult, fields) {
-                                    if (err) {
-                                        fileterResponse.error[table + "Details"] = err.message;
-                                        reject(err);
-                                    }
-
-                                    if (additionalDetailsResult.length > 0)
-                                        fileterResponse[table + "Details"] =
-                                            additionalDetailsResult[0];
-                                    else
-                                        fileterResponse.error[table + "Details"] =
-                                            "User additional details not found";
-
-                                    resolve();
-                                }
-                            );
-                        });
-                    });
-
-                    Promise.all(queries)
-                        .then(() => {
-                            if (fileterResponse.length > 0)
+                            if (results.length > 0) {
                                 return res.status(200).json({
                                     success: true,
-                                    data: fileterResponse,
+                                    data: results,
                                 });
-                            else
-                                return res.status(200).json({
-                                    success: true,
-                                    data: Array(fileterResponse),
-                                });
-                        })
-                        .catch((err) => {
-                            return res.status(400).json({
-                                success: false,
-                                status: err.message,
-                            });
-                        });
+                            }
+                        }
+                    );
                 } else
                     return res.status(200).json({
                         success: true,
