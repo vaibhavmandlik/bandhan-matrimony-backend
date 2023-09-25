@@ -431,4 +431,73 @@ router.put('/preferences', function (req, res, next) {
   });
 });
 
+router.post('/lastSeen', function (req, res, next) {
+  user = req.body
+  connection.query("SELECT * FROM last_seen_master WHERE userId=?", [user.userId], function (err, result) {
+    if (err) {
+      console.log(err);
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          status: err.message,
+        });
+    }
+    if (result.length > 0) {
+      connection.query("UPDATE last_seen_master SET userId=? WHERE userId=?", [user.userId, user.userId], function (err, result) {
+        if (err) {
+          console.log(err);
+
+          return res
+            .status(500)
+            .json({
+              success: false,
+              status: err.message,
+            });
+        }
+        else {
+          console.log("Record Updated in Last Seen");
+
+          return res
+            .status(200)
+            .json({
+              success: true,
+              data: result,
+            });
+        }
+
+      });
+    }
+    else {
+      var sql =
+        "INSERT INTO `last_seen_master` (userId) VALUES (?)";
+      var values = [
+        user.userId,
+      ];
+      connection.query(sql, values, function (err, result) {
+        if (err) {
+          console.log(err);
+
+          return res
+            .status(500)
+            .json({
+              success: false,
+              status: err.message,
+            });
+        }
+        else {
+          console.log("Record inserted in Last Seen");
+
+          return res
+            .status(200)
+            .json({
+              success: true,
+              data: result,
+            });
+        }
+      });
+    }
+  });
+});
 module.exports = router;
