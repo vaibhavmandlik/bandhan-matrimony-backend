@@ -53,7 +53,7 @@ router.get("/", function (req, res, next) {
     });
 });
 
-router.get('/lsitContents', function (req, res, next) {
+router.get('/listContents', function (req, res, next) {
     // simple query
     connection.query(
         'SELECT * FROM `dropdown_list_master`',
