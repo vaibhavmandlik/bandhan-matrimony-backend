@@ -62,4 +62,22 @@ function isNotNullOrUndefined(obj) {
         return true;
 }
 
-module.exports = { userCodeGenerator, addNotification, isNotNullOrEmptyOrUndefined, isNotNullOrUndefined, isNullOrEmptyOrUndefined, isNullOrUndefined };
+function calculateAge(dob) {
+    const dobDate = new Date(dob);
+    const currentDate = new Date();
+
+    let age = currentDate.getFullYear() - dobDate.getFullYear();
+
+    if (
+        currentDate.getMonth() < dobDate.getMonth() ||
+        (currentDate.getMonth() === dobDate.getMonth() &&
+            currentDate.getDate() < dobDate.getDate())
+    ) {
+        age--;
+    }
+
+    return age.toString();
+}
+
+
+module.exports = { userCodeGenerator, addNotification, isNotNullOrEmptyOrUndefined, isNotNullOrUndefined, isNullOrEmptyOrUndefined, isNullOrUndefined, calculateAge };

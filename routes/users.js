@@ -471,7 +471,7 @@ router.post('/lastSeen', function (req, res, next) {
     }
     else {
       var sql =
-        "INSERT INTO `last_seen_master` (userId) VALUES (?)";
+        "INSERT INTO `user_lastseen_master` (userId) VALUES (?)";
       var values = [
         user.userId,
       ];
@@ -500,4 +500,5 @@ router.post('/lastSeen', function (req, res, next) {
     }
   });
 });
+
 module.exports = router;
