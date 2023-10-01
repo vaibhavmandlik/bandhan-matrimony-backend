@@ -1972,6 +1972,56 @@ async function executeUpdateQueries(req, res, user) {
             );
     }
 
+    if ("personalDocumentDetails" in user) {
+        var personalDocumentDetails = user.personalDocumentDetails;
+
+        promises.push(
+            new Promise((resolve, reject) => {
+                if ("userId" in personalDocumentDetails && personalDocumentDetails.userId != null && personalDocumentDetails.userId != "" && personalDocumentDetails.userId != undefined) {
+                    console.log("Records present in personal, now updating");
+                    var sql =
+                        "UPDATE `user_personal_document_master` SET aadharId=?, updatedBy=? WHERE userId=?";
+                    var values = [
+                        common.isNullOrEmptyOrUndefined(personalDocumentDetails.aadharId) ? "" : personalDocumentDetails.aadharId,
+                        personalDocumentDetails.userId,
+                        personalDocumentDetails.userId,
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Number of records updated: " + result.affectedRows);
+
+                            personalDocumentDetails.id = result.insertId;
+                            response.personalDocumentDetails = personalDocumentDetails;
+                        }
+                        resolve();
+                    });
+                } else {
+                    var sql =
+                        "INSERT INTO `user_personal_document_master` (userId, aadharId, createdBy, updatedBy) VALUES (?, ?, ?, ?)";
+                    var values = [
+                        user.id,
+                        common.isNullOrEmptyOrUndefined(personalDocumentDetails.aadharId) ? "" : personalDocumentDetails.aadharId,
+                        user.id,
+                        user.id,
+                    ];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) reject(err);
+                        else {
+                            console.log("Record inserted in address");
+
+                            personalDocumentDetails.id = result.insertId;
+                            response.personalDocumentDetails = personalDocumentDetails;
+                        }
+                        resolve();
+                    });
+                }
+            })
+        );
+    }
+
     try {
         if (promises.length > 0) {
             await Promise.all(promises);
@@ -2154,27 +2204,6 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
     promises.push(
         new Promise((resolve, reject) => {
             connection.query(
-                "SELECT * FROM user_personal_document_master `users` WHERE enabled='1' AND userId=?",
-                [userId],
-                function (err, result) {
-                    if (err) reject(err);
-                    else if (result.length > 0) {
-                        console.log(
-                            "Number of records from personal documents: " + result.length
-                        );
-
-                        responseData.personalDocument = result[0];
-                    }
-
-                    resolve();
-                }
-            );
-        })
-    );
-
-    promises.push(
-        new Promise((resolve, reject) => {
-            connection.query(
                 "SELECT * FROM user_professional_details_master `users` WHERE enabled='1' AND userId=?",
                 [userId],
                 function (err, result) {
@@ -2229,7 +2258,7 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                 );
             })
         );
-       
+
         promises.push(
             new Promise((resolve, reject) => {
                 connection.query(
@@ -2243,57 +2272,76 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                             );
                             let pref1 = convertToJson(result[0].preference);
                             let matches = [];
-    
+
                             let age = common.calculateAge(responseData.basicDetails.dateOfBirth);
                             if (age >= pref1.fromAge && age <= pref1.toAge)
                                 matches.push("Age");
-    
+
                             if (responseData.basicDetails.height >= pref1.fromHeight && responseData.basicDetails.toHeight <= pref1.toHeight)
                                 matches.push("Height");
-    
+
                             if (responseData.basicDetails.weight >= pref1.fromWeight && responseData.basicDetails.weight <= pref1.toWeight)
                                 matches.push("Weight");
-    
+
                             if (responseData.addressDetails.currentCity == pref1.location)
                                 matches.push("Location");
-    
+
                             if (responseData.personalDetails.marriageType == pref1.maritalStatus)
                                 matches.push("Marital Status");
-    
+
                             if (responseData.kundaliDetails.religion == pref1.religion)
                                 matches.push("Religion");
-    
+
                             if (responseData.kundaliDetails.caste == pref1.casteSubcaste)
                                 matches.push("Caste");
-    
+
                             if (responseData.personalDetails.motherTongue == pref1.motherTongue)
                                 matches.push("Mother Tongue");
-    
+
                             if (Object.keys(responseData.educationalDetails).length > 0 && responseData.educationalDetails.filter(e => e.qualification == pref1.education).length > 0)
                                 matches.push("Education");
-    
+
                             if (responseData.professionalDetails.designation == pref1.designation)
                                 matches.push("Work Type");
-    
+
                             if (responseData.professionalDetails.incomeRange == pref1.income)
                                 matches.push("Income");
-    
+
                             if (responseData.personalDetails.familyType == pref1.familyType)
                                 matches.push("Family Type");
-                            
+
                             if (responseData.additionalDetails.houseType == pref1.houseType)
                                 matches.push("House Type");
-                            
+
                             if (responseData.additionalDetails.foodType == pref1.foodType)
                                 matches.push("Diet Type");
-                            
+
                             if (responseData.medicalDetails.alcoholic == pref1.alcoholic)
                                 matches.push("Alcohol");
-    
+
                             if (responseData.medicalDetails.smoking == pref1.smoking)
                                 matches.push("Smoking");
-    
+
                             responseData.pref = matches;
+                        }
+
+                        resolve();
+                    }
+                );
+            })
+        );
+    } else {
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(
+                    "SELECT * FROM user_personal_document_master `users` WHERE enabled='1' AND userId=?",
+                    [userId],
+                    function (err, result) {
+                        if (err) reject(err);
+                        else if (result.length > 0) {
+                            console.log("Number of records from personal documents: " + result.length);
+
+                            responseData.personalDocumentDetails = result[0];
                         }
 
                         resolve();
