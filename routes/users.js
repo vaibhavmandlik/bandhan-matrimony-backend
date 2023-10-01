@@ -433,7 +433,7 @@ router.put('/preferences', function (req, res, next) {
 
 router.post('/lastSeen', function (req, res, next) {
   user = req.body
-  connection.query("SELECT * FROM last_seen_master WHERE userId=?", [user.userId], function (err, result) {
+  connection.query("SELECT * FROM user_lastseen_master WHERE userId=?", [user.userId], function (err, result) {
     if (err) {
       console.log(err);
 
@@ -445,7 +445,7 @@ router.post('/lastSeen', function (req, res, next) {
         });
     }
     if (result.length > 0) {
-      connection.query("UPDATE last_seen_master SET userId=? WHERE userId=?", [user.userId, user.userId], function (err, result) {
+      connection.query("UPDATE user_lastseen_master SET lastSeen=? WHERE userId=?", [new Date(), user.userId], function (err, result) {
         if (err) {
           console.log(err);
 
