@@ -21,57 +21,7 @@ router.post('/', function (req, res, next) {
             user.id = result.insertId;
             response.user = user;
         }
-        connection.query("SELECT * FROM user_lastseen_master WHERE userId=?", [user.userId], function (err, result) {
-            if (err) {
-                console.log(err);
-
-                return res
-                    .status(500)
-                    .json({
-                        success: false,
-                        status: err.message,
-                    });
-            }
-            if (result.length > 0) {
-                connection.query("UPDATE user_lastseen_master SET lastSeen=? WHERE userId=?", [new Date(), user.userId], function (err, result) {
-                    if (err) {
-                        console.log(err);
-
-                        return res
-                            .status(500)
-                            .json({
-                                success: false,
-                                status: err.message,
-                            });
-                    }
-                    else {
-                        console.log("Record Updated in Last Seen");
-                    }
-
-                });
-            }
-            else {
-                var sql = "INSERT INTO `user_lastseen_master` (userId) VALUES (?)";
-                var values = [
-                    user.userId,
-                ];
-                connection.query(sql, values, function (err, result) {
-                    if (err) {
-                        console.log(err);
-
-                        return res
-                            .status(500)
-                            .json({
-                                success: false,
-                                status: err.message,
-                            });
-                    }
-                    else {
-                        console.log("Record inserted in Last Seen");
-                    }
-                });
-            }
-        });
+        
         return res
             .status(200)
             .json({
@@ -122,13 +72,67 @@ router.get('/', function (req, res, next) {
                             });
                     }
 
+                    connection.query("SELECT * FROM user_lastseen_master WHERE userId=?", [user], function (err, result) {
+                        if (err) {
+                            console.log(err);
+            
+                            return res
+                                .status(500)
+                                .json({
+                                    success: false,
+                                    status: err.message,
+                                });
+                        }
+                        if (result.length > 0) {
+                            connection.query("UPDATE user_lastseen_master SET lastSeen=? WHERE userId=?", [new Date(), user], function (err, result) {
+                                if (err) {
+                                    console.log(err);
+            
+                                    return res
+                                        .status(500)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                else {
+                                    console.log("Record Updated in Last Seen");
+                                }
+            
+                            });
+                        }
+                        else {
+                            var sql = "INSERT INTO `user_lastseen_master` (userId) VALUES (?)";
+                            var values = [
+                                user,
+                            ];
+                            connection.query(sql, values, function (err, result) {
+                                if (err) {
+                                    console.log(err);
+            
+                                    return res
+                                        .status(500)
+                                        .json({
+                                            success: false,
+                                            status: err.message,
+                                        });
+                                }
+                                else {
+                                    console.log("Record inserted in Last Seen");
+                                }
+                            });
+                        }
+                    });
+
                     return res
                         .status(200)
                         .json({
                             success: true,
                             data: results
                         });
-                })
+                });
+
+                
 
         }
     );
