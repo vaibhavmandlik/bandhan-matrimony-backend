@@ -9,56 +9,76 @@ router.post("/", async (req, res) => {
   var email = req.body.email;
   let code = common.userCodeGenerator('1234567890', 4);
 
-  const transporter = nodemailer.createTransport({
-    port: 465, // true for 465, false for other ports
-    host: "smtp.gmail.com",
-    auth: {
-      user: "vaibhav.mandlik2@gmail.com",
-      pass: "wwixxvvjwhanveud",
-    },
-    secure: true,
-  });
-
-  const mailData = {
-    from: "divyabandhan.online@gmail.com", // sender address
-    to: email, // list of receivers
-    subject: "Divya Bandhan - OTP for onboarding",
-    html: "Welcome to Divya Bandhan,<br> Your OTP for onboarding is " + code + "<br><br><br><br>Regards,<br>Team<br>Divya Bandhan",
-  };
-
-  transporter.sendMail(mailData, function (err, info) {
-    if (err) {
-      console.log(err);
-      res.status(500).json({
-        success: false,
-        data: {
+  connection.query(
+    "SELECT * FROM `users` WHERE username=?",
+    [email],
+    function (err, results) {
+      if (err)
+        return res.status(500).json({
+          success: false,
           status: err.message,
-        },
-      });
-    } else {
-      console.log(info);
+        });
 
-      connection.query(
-        "INSERT INTO `otp_master` (otp, type, validUpto, createdBy) VALUES (?, ?, ?, ?)",
-        [code, "0", new Date(new Date().getTime() + 5 * 60000), email],
-        function (err, factResult) {
+      if (results.length == 0) {
+        return res.status(200).json({
+          success: false,
+          status: "User does not exist",
+        });
+      } else {
+        const transporter = nodemailer.createTransport({
+          port: 465, // true for 465, false for other ports
+          host: "smtp.gmail.com",
+          auth: {
+            user: "vaibhav.mandlik2@gmail.com",
+            pass: "wwixxvvjwhanveud",
+          },
+          secure: true,
+        });
+
+        const mailData = {
+          from: "divyabandhan.online@gmail.com", // sender address
+          to: email, // list of receivers
+          subject: "Divya Bandhan - OTP for onboarding",
+          html: "Welcome to Divya Bandhan,<br> Your OTP for onboarding is " + code + "<br><br><br><br>Regards,<br>Team<br>Divya Bandhan",
+        };
+
+        transporter.sendMail(mailData, function (err, info) {
           if (err) {
-            return res.status(500).json({
+            console.log(err);
+            res.status(500).json({
               success: false,
-              status: err.message,
+              data: {
+                status: err.message,
+              },
             });
-          }
-          console.log(
-            "Inserted records in OTP master: " + factResult.affectedRows
-          );
+          } else {
+            console.log(info);
 
-          return res.status(200).json({
-            success: true,
-          });
-        }
-      );
+            connection.query(
+              "INSERT INTO `otp_master` (otp, type, validUpto, createdBy) VALUES (?, ?, ?, ?)",
+              [code, "0", new Date(new Date().getTime() + 5 * 60000), email],
+              function (err, factResult) {
+                if (err) {
+                  return res.status(500).json({
+                    success: false,
+                    status: err.message,
+                  });
+                }
+                console.log(
+                  "Inserted records in OTP master: " + factResult.affectedRows
+                );
+
+                return res.status(200).json({
+                  success: true,
+                });
+              }
+            );
+          }
+        });
+      }
+
     }
-  });
+  );
 });
 
 router.post("/authenticate", async (req, res) => {
@@ -79,7 +99,7 @@ router.post("/authenticate", async (req, res) => {
         success: false,
         status: "OTP not found"
       });
-    }     else if (result[0].validUpto > new Date()) {
+    } else if (result[0].validUpto > new Date()) {
       return res.status(200).json({
         success: true,
       });
