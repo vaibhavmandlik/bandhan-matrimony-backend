@@ -395,10 +395,14 @@ router.get("/interest", function (req, res, next) {
         new Promise((resolve, reject) => {
             // Query for interest request sent
             connection.query(
-                'SELECT `interestedInId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE `enabled`="1" AND `userId`=? GROUP BY `interestedInId`',
+                'SELECT `interestedInId`, MAX(`isAccepted`) AS `maxIsAccepted`, MAX(`id`) AS `maxId` FROM `user_interest_details_master` WHERE `enabled`="1" AND `userId`=? GROUP BY `interestedInId`;',
                 [user],
                 function (err, result, fields) {
-                    if (err) reject(err);
+                    console.log(result);
+                    if (err) {
+                        console.log(err);
+                        reject(err);
+                    }
                     else if (result.length > 0) {
                         let sentIds = [];
                         result.forEach((element) => {
@@ -406,10 +410,11 @@ router.get("/interest", function (req, res, next) {
                         });
 
                         connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `basic`.`dateOfBirth`, `address`.`city`, `kundali`.`caste`, `personal`.`gender`, (SELECT `docPath` FROM `user_document_details_master` WHERE `userId` = `users`.`id` AND `enabled` = '1' AND `docType` = '1' LIMIT 1) AS `docPath`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` AND `basic`.`enabled` = '1' LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` AND `address`.`enabled` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` AND `kundali`.`enabled` = '1' LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` AND `personal`.`enabled` = '1' LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN  (?)",
+                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `basic`.`dateOfBirth`, `address`.`city`, `kundali`.`caste`, `personal`.`gender`, (SELECT `docPath` FROM `user_document_details_master` WHERE `userId` = `users`.`id` AND `enabled` = '1' AND `docType` = '1' LIMIT 1) AS `docPath`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` AND `basic`.`enabled` = '1' LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` AND `address`.`enabled` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` AND `kundali`.`enabled` = '1' LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` AND `personal`.`enabled` = '1' LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN  (?)",
                             [sentIds],
                             function (err, results, fields) {
                                 if (err) {
+                                    console.log(err);
                                     reject(err);
                                 }
 
@@ -440,10 +445,13 @@ router.get("/interest", function (req, res, next) {
         new Promise((resolve, reject) => {
             // Query for interest request received
             connection.query(
-                'SELECT `userId`, `isAccepted`, `id` FROM `user_interest_details_master` WHERE `enabled`="1" AND `interestedInId`=? GROUP BY `userId`',
+                'SELECT `userId`, MAX(`isAccepted`) AS `isAccepted`, MAX(`id`) AS `id` FROM `user_interest_details_master` WHERE `enabled`="1" AND `interestedInId`=? GROUP BY `userId`',
                 [user],
                 function (err, result, fields) {
-                    if (err) reject(err);
+                    if (err) {
+                        console.log(err);
+                        reject(err);
+                    }
                     else if (result.length > 0) {
                         let received = [];
                         result.forEach((element) => {
@@ -452,10 +460,13 @@ router.get("/interest", function (req, res, next) {
                         });
 
                         connection.query(
-                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `basic`.`dateOfBirth`, `address`.`city`, `kundali`.`caste`, `personal`.`gender`, (SELECT `docPath` FROM `user_document_details_master` WHERE `userId` = `users`.`id` AND `enabled` = '1' AND `docType` = '1' LIMIT 1) AS `docPath`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` AND `basic`.`enabled` = '1' LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` AND `address`.`enabled` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` AND `kundali`.`enabled` = '1' LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` AND `personal`.`enabled` = '1' LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN  (?)",
+                            "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `basic`.`dateOfBirth`, `address`.`city`, `kundali`.`caste`, `personal`.`gender`, (SELECT `docPath` FROM `user_document_details_master` WHERE `userId` = `users`.`id` AND `enabled` = '1' AND `docType` = '1' LIMIT 1) AS `docPath`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` AND `basic`.`enabled` = '1' LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` AND `address`.`enabled` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` AND `kundali`.`enabled` = '1' LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` AND `personal`.`enabled` = '1' LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN  (?)",
                             [received],
                             function (err, results, fields) {
-                                if (err) reject(err);
+                                if (err) {
+                                    console.log(err);
+                                    reject(err);
+                                }
 
                                 results.map((m) => {
                                     let interestRequest = result.filter((a) => a.userId == m.id);
@@ -747,7 +758,7 @@ router.post("/filter", function (req, res, next) {
 
                 if (userResult.length > 0) {
                     connection.query(
-                        "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
+                        "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?)",
                         [userResult[0].id],
                         function (err, results, fields) {
                             if (err) {
@@ -807,8 +818,8 @@ async function executeFilterQueries(req, res) {
                             });
 
                             connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                [userId],
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                [userId, userId],
                                 function (err, results, fields) {
                                     if (err) {
                                         reject(err);
@@ -848,8 +859,8 @@ async function executeFilterQueries(req, res) {
                             });
 
                             connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                [userId],
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                [userId, userId],
                                 function (err, results, fields) {
                                     if (err) {
                                         reject(err);
@@ -892,8 +903,8 @@ async function executeFilterQueries(req, res) {
                                 });
 
                                 connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                    [userId],
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                    [userId, userId],
                                     function (err, results, fields) {
                                         if (err) {
                                             reject(err);
@@ -939,8 +950,8 @@ async function executeFilterQueries(req, res) {
                                 });
 
                                 connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                    [userId],
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                    [userId, userId],
                                     function (err, results, fields) {
                                         if (err) {
                                             reject(err);
@@ -985,8 +996,8 @@ async function executeFilterQueries(req, res) {
                                 });
 
                                 connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                    [userId],
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                    [userId, userId],
                                     function (err, results, fields) {
                                         if (err) {
                                             reject(err);
@@ -1034,8 +1045,8 @@ async function executeFilterQueries(req, res) {
                                 });
 
                                 connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                    [userId],
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                    [userId, userId],
                                     function (err, results, fields) {
                                         if (err) {
                                             reject(err);
@@ -1080,8 +1091,8 @@ async function executeFilterQueries(req, res) {
                                 });
 
                                 connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                    [userId],
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                    [userId, userId],
                                     function (err, results, fields) {
                                         if (err) {
                                             reject(err);
@@ -1126,8 +1137,8 @@ async function executeFilterQueries(req, res) {
                                 });
 
                                 connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                    [userId],
+                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                    [userId, userId],
                                     function (err, results, fields) {
                                         if (err) {
                                             reject(err);
@@ -1172,7 +1183,7 @@ async function executeFilterQueries(req, res) {
     //                             });
 
     //                             connection.query(
-    //                                 "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
+    //                                 "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?)",
     //                                 [userId],
     //                                 function (err, results, fields) {
     //                                     if (err) {
@@ -1213,8 +1224,8 @@ async function executeFilterQueries(req, res) {
                             });
 
                             connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                [userId],
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                [userId, userId],
                                 function (err, results, fields) {
                                     if (err) {
                                         reject(err);
@@ -1253,8 +1264,8 @@ async function executeFilterQueries(req, res) {
                             });
 
                             connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                [userId],
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                [userId, userId],
                                 function (err, results, fields) {
                                     if (err) {
                                         reject(err);
@@ -1294,8 +1305,8 @@ async function executeFilterQueries(req, res) {
                             });
 
                             connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                [userId],
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                [userId, userId],
                                 function (err, results, fields) {
                                     if (err) {
                                         reject(err);
@@ -1335,8 +1346,8 @@ async function executeFilterQueries(req, res) {
                             });
 
                             connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                [userId],
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                [userId, userId],
                                 function (err, results, fields) {
                                     if (err) {
                                         reject(err);
@@ -1374,8 +1385,8 @@ async function executeFilterQueries(req, res) {
                             });
 
                             connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                [userId],
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                [userId, userId],
                                 function (err, results, fields) {
                                     if (err) {
                                         reject(err);
@@ -1415,8 +1426,8 @@ async function executeFilterQueries(req, res) {
                             });
 
                             connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)",
-                                [userId],
+                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                                [userId, userId],
                                 function (err, results, fields) {
                                     if (err) {
                                         reject(err);
@@ -1447,6 +1458,7 @@ async function executeFilterQueries(req, res) {
             data: responseData,
         });
     } catch (err) {
+        console.log("Err: ", err.message);
         res.status(400).json({
             success: false,
             status: err.message,
@@ -2359,6 +2371,7 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
             data: responseData,
         });
     } catch (err) {
+        console.log("Err: ", err.message);
         res.status(500).json({
             success: false,
             status: err.message,
