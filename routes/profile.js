@@ -801,6 +801,7 @@ function checkDuplicateResponse(results, responseData) {
 async function executeFilterQueries(req, res) {
     const promises = [];
     let responseData = [];
+    let userId = [];
 
     if ("fromHeight" in req.body && "toHeight" in req.body) {
         promises.push(
@@ -812,28 +813,12 @@ async function executeFilterQueries(req, res) {
                         if (err) {
                             reject(err);
                         } else if (userResult.length > 0) {
-                            let userId = [];
                             userResult.forEach((element) => {
                                 userId.push(element.userId);
                             });
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                [userId, userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
-                                    }
+                            resolve();
 
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(
-                                            results,
-                                            responseData
-                                        );
-                                    }
-                                    resolve();
-                                }
-                            );
                         } else {
                             resolve();
                         }
@@ -853,28 +838,11 @@ async function executeFilterQueries(req, res) {
                         if (err) {
                             reject(err);
                         } else if (userResult.length > 0) {
-                            let userId = [];
                             userResult.forEach((element) => {
                                 userId.push(element.userId);
                             });
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                [userId, userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
-                                    }
-
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(
-                                            results,
-                                            responseData
-                                        );
-                                    }
-                                    resolve();
-                                }
-                            );
+                            resolve();
                         } else {
                             resolve();
                         }
@@ -897,29 +865,11 @@ async function executeFilterQueries(req, res) {
                         function (err, userResult, fields) {
                             if (err) reject(err);
                             else if (userResult.length > 0) {
-                                let userId = [];
                                 userResult.forEach((element) => {
                                     userId.push(element.userId);
                                 });
 
-                                connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                    [userId, userId],
-                                    function (err, results, fields) {
-                                        if (err) {
-                                            reject(err);
-                                        }
-
-                                        if (results.length > 0) {
-                                            responseData = checkDuplicateResponse(
-                                                results,
-                                                responseData
-                                            );
-                                        }
-
-                                        resolve();
-                                    }
-                                );
+                                resolve();
                             } else {
                                 resolve();
                             }
@@ -944,28 +894,11 @@ async function executeFilterQueries(req, res) {
                         function (err, userResult, fields) {
                             if (err) reject(err);
                             else if (userResult.length > 0) {
-                                let userId = [];
                                 userResult.forEach((element) => {
                                     userId.push(element.userId);
                                 });
 
-                                connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                    [userId, userId],
-                                    function (err, results, fields) {
-                                        if (err) {
-                                            reject(err);
-                                        }
-                                        if (results.length > 0) {
-                                            responseData = checkDuplicateResponse(
-                                                results,
-                                                responseData
-                                            );
-                                        }
-
-                                        resolve();
-                                    }
-                                );
+                                resolve();
                             } else {
                                 resolve();
                             }
@@ -990,29 +923,11 @@ async function executeFilterQueries(req, res) {
                         function (err, userResult, fields) {
                             if (err) reject(err);
                             else if (userResult.length > 0) {
-                                let userId = [];
                                 userResult.forEach((element) => {
                                     userId.push(element.userId);
                                 });
 
-                                connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                    [userId, userId],
-                                    function (err, results, fields) {
-                                        if (err) {
-                                            reject(err);
-                                        }
-
-                                        if (results.length > 0) {
-                                            responseData = checkDuplicateResponse(
-                                                results,
-                                                responseData
-                                            );
-                                        }
-
-                                        resolve();
-                                    }
-                                );
+                                resolve();
                             } else {
                                 resolve();
                             }
@@ -1039,28 +954,11 @@ async function executeFilterQueries(req, res) {
                         function (err, userResult, fields) {
                             if (err) reject(err);
                             else if (userResult.length > 0) {
-                                let userId = [];
                                 userResult.forEach((element) => {
                                     userId.push(element.userId);
                                 });
 
-                                connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                    [userId, userId],
-                                    function (err, results, fields) {
-                                        if (err) {
-                                            reject(err);
-                                        }
-                                        if (results.length > 0) {
-                                            responseData = checkDuplicateResponse(
-                                                results,
-                                                responseData
-                                            );
-                                        }
-
-                                        resolve();
-                                    }
-                                );
+                                resolve();
                             } else {
                                 resolve();
                             }
@@ -1085,28 +983,11 @@ async function executeFilterQueries(req, res) {
                         function (err, userResult, fields) {
                             if (err) reject(err);
                             else if (userResult.length > 0) {
-                                let userId = [];
                                 userResult.forEach((element) => {
                                     userId.push(element.userId);
                                 });
 
-                                connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                    [userId, userId],
-                                    function (err, results, fields) {
-                                        if (err) {
-                                            reject(err);
-                                        }
-                                        if (results.length > 0) {
-                                            responseData = checkDuplicateResponse(
-                                                results,
-                                                responseData
-                                            );
-                                        }
-
-                                        resolve();
-                                    }
-                                );
+                                resolve();
                             } else {
                                 resolve();
                             }
@@ -1131,28 +1012,11 @@ async function executeFilterQueries(req, res) {
                         function (err, userResult, fields) {
                             if (err) reject(err);
                             else if (userResult.length > 0) {
-                                let userId = [];
                                 userResult.forEach((element) => {
                                     userId.push(element.userId);
                                 });
 
-                                connection.query(
-                                    "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                    [userId, userId],
-                                    function (err, results, fields) {
-                                        if (err) {
-                                            reject(err);
-                                        }
-                                        if (results.length > 0) {
-                                            responseData = checkDuplicateResponse(
-                                                results,
-                                                responseData
-                                            );
-                                        }
-
-                                        resolve();
-                                    }
-                                );
+                                cresolve();
                             } else {
                                 resolve();
                             }
@@ -1163,52 +1027,6 @@ async function executeFilterQueries(req, res) {
         }
     }
 
-    // if ("mangalik" in req.body) {
-    //     if (
-    //         req.body.mangalik != "" ||
-    //         req.body.mangalik != null ||
-    //         req.body.mangalik != undefined
-    //     ) {
-    //         promises.push(
-    //             new Promise((resolve, reject) => {
-    //                 connection.query(
-    //                     "SELECT `userId` FROM `user_kundali_details_master` WHERE manglik = ? AND manglik <> ''",
-    //                     [req.body.mangalik],
-    //                     function (err, userResult, fields) {
-    //                         if (err) reject(err);
-    //                         else if (userResult.length > 0) {
-    //                             let userId = [];
-    //                             userResult.forEach((element) => {
-    //                                 userId.push(element.userId);
-    //                             });
-
-    //                             connection.query(
-    //                                 "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?)",
-    //                                 [userId],
-    //                                 function (err, results, fields) {
-    //                                     if (err) {
-    //                                         reject(err);
-    //                                     }
-    //                                     if (results.length > 0) {
-    //                                         responseData = checkDuplicateResponse(
-    //                                             results,
-    //                                             responseData
-    //                                         );
-    //                                     }
-
-    //                                     resolve();
-    //                                 }
-    //                             );
-    //                         } else {
-    //                             resolve();
-    //                         }
-    //                     }
-    //                 );
-    //             })
-    //         );
-    //     }
-    // }
-
     if ("graduation" in req.body || "postGraduation" in req.body) {
         promises.push(
             new Promise((resolve, reject) => {
@@ -1218,28 +1036,11 @@ async function executeFilterQueries(req, res) {
                     function (err, userResult, fields) {
                         if (err) reject(err);
                         else if (userResult.length > 0) {
-                            let userId = [];
                             userResult.forEach((element) => {
                                 userId.push(element.userId);
                             });
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                [userId, userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
-                                    }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(
-                                            results,
-                                            responseData
-                                        );
-                                    }
-
-                                    resolve();
-                                }
-                            );
+                            resolve();
                         } else {
                             resolve();
                         }
@@ -1258,27 +1059,11 @@ async function executeFilterQueries(req, res) {
                     function (err, userResult, fields) {
                         if (err) reject(err);
                         else if (userResult.length > 0) {
-                            let userId = [];
                             userResult.forEach((element) => {
                                 userId.push(element.userId);
                             });
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                [userId, userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
-                                    }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(
-                                            results,
-                                            responseData
-                                        );
-                                    }
-                                    resolve();
-                                }
-                            );
+                            resolve();
                         } else {
                             resolve();
                         }
@@ -1299,27 +1084,11 @@ async function executeFilterQueries(req, res) {
                     function (err, userResult, fields) {
                         if (err) reject(err);
                         else if (userResult.length > 0) {
-                            let userId = [];
                             userResult.forEach((element) => {
                                 userId.push(element.userId);
                             });
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                [userId, userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
-                                    }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(
-                                            results,
-                                            responseData
-                                        );
-                                    }
-                                    resolve();
-                                }
-                            );
+                            resolve();
                         } else {
                             resolve();
                         }
@@ -1340,27 +1109,11 @@ async function executeFilterQueries(req, res) {
                     function (err, userResult, fields) {
                         if (err) reject(err);
                         else if (userResult.length > 0) {
-                            let userId = [];
                             userResult.forEach((element) => {
                                 userId.push(element.userId);
                             });
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                [userId, userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
-                                    }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(
-                                            results,
-                                            responseData
-                                        );
-                                    }
-                                    resolve();
-                                }
-                            );
+                            resolve();
                         } else {
                             resolve();
                         }
@@ -1379,27 +1132,11 @@ async function executeFilterQueries(req, res) {
                     function (err, userResult, fields) {
                         if (err) reject(err);
                         else if (userResult.length > 0) {
-                            let userId = [];
                             userResult.forEach((element) => {
                                 userId.push(element.userId);
                             });
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                [userId, userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
-                                    }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(
-                                            results,
-                                            responseData
-                                        );
-                                    }
-                                    resolve();
-                                }
-                            );
+                            resolve();
                         } else {
                             resolve();
                         }
@@ -1420,28 +1157,11 @@ async function executeFilterQueries(req, res) {
                     function (err, userResult, fields) {
                         if (err) reject(err);
                         else if (userResult.length > 0) {
-                            let userId = [];
                             userResult.forEach((element) => {
                                 userId.push(element.userId);
                             });
 
-                            connection.query(
-                                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                                [userId, userId],
-                                function (err, results, fields) {
-                                    if (err) {
-                                        reject(err);
-                                    }
-                                    if (results.length > 0) {
-                                        responseData = checkDuplicateResponse(
-                                            results,
-                                            responseData
-                                        );
-                                    }
-
-                                    resolve();
-                                }
-                            );
+                            resolve();
                         } else {
                             resolve();
                         }
@@ -1450,6 +1170,28 @@ async function executeFilterQueries(req, res) {
             })
         );
     }
+
+    promises.push(
+        new Promise((resolve, reject) => {
+            connection.query(
+                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
+                [userId, req.body.userId],
+                function (err, results, fields) {
+                    if (err) {
+                        reject(err);
+                    }
+
+                    if (results.length > 0) {
+                        responseData = checkDuplicateResponse(
+                            results,
+                            responseData
+                        );
+                    }
+                    resolve();
+                }
+            );
+        })
+    );
 
     try {
         await Promise.all(promises);
