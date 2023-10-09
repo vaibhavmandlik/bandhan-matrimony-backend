@@ -1458,6 +1458,7 @@ async function executeFilterQueries(req, res) {
             data: responseData,
         });
     } catch (err) {
+        console.log("Err: ", err.message);
         res.status(400).json({
             success: false,
             status: err.message,
@@ -2370,6 +2371,7 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
             data: responseData,
         });
     } catch (err) {
+        console.log("Err: ", err.message);
         res.status(500).json({
             success: false,
             status: err.message,
