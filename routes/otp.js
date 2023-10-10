@@ -10,7 +10,7 @@ router.post("/", async (req, res) => {
   let isSignup = req.body.isSignup;
   let code = common.userCodeGenerator('1234567890', 4);
 
-  if (isSignup)
+  if (isSignup != "true")
     connection.query(
       "SELECT * FROM `users` WHERE username=?",
       [email],

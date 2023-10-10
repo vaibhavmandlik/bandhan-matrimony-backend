@@ -1192,7 +1192,7 @@ async function executeFilterQueries(req, res) {
                     );
                 }
 
-                console.log("Filter Response: ", responseData);
+                console.log("Filter Response size: ", responseData.length);
 
                 return res.status(200).json({
                     success: true,
