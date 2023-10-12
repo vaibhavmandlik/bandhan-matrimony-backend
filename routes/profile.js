@@ -855,7 +855,7 @@ async function executeFilterQueries(req, res) {
 
     if ("location" in req.body) {
         if (req.body.locations != "" || req.body.locations != null || req.body.locations != undefined) {
-            let locations = req.body.location.split(",");
+            let locations = req.body.location;
 
             promises.push(
                 new Promise((resolve, reject) => {
@@ -946,11 +946,11 @@ async function executeFilterQueries(req, res) {
         ) {
             promises.push(
                 new Promise((resolve, reject) => {
-                    let a = req.body.casteSubcaste.split(",");
+                    let a = req.body.casteSubcaste;
 
                     connection.query(
-                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `(caste` = ? AND `subCaste` = ?) AND (caste <> '' AND subCaste <> '')",
-                        [a[0], a[1]],
+                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `caste` = ? AND caste <> ''",
+                        [a],
                         function (err, userResult, fields) {
                             if (err) reject(err);
                             else if (userResult.length > 0) {
@@ -1027,7 +1027,7 @@ async function executeFilterQueries(req, res) {
         }
     }
 
-    if ("graduation" in req.body || "postGraduation" in req.body) {
+    if ("graduation" in req.body) {
         promises.push(
             new Promise((resolve, reject) => {
                 connection.query(
