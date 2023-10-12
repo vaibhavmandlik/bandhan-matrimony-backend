@@ -79,8 +79,8 @@ function sendOTP(email, code, res) {
     port: 465,
     host: "smtp.gmail.com",
     auth: {
-      user: "vaibhav.mandlik2@gmail.com",
-      pass: "wwixxvvjwhanveud",
+      user: "divyabandhan.online@gmail.com",
+      pass: "tmpikkubxqncgwrx",
     },
     secure: true,
   });
