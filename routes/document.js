@@ -72,6 +72,7 @@ router.get('/listContents', function (req, res, next) {
 async function uploadPhoto(id, imageList, result, res) {
     var responseData = [];
     const promises = [];
+    let extra = 0;
     for (let i = 0; i < imageList.length; i++) {
 
         promises.push(new Promise((resolve, reject) => {
@@ -83,27 +84,26 @@ async function uploadPhoto(id, imageList, result, res) {
             const uniqueFileName = `${Date.now().toString()}_${id}${fileExtension}`;
             const imagePath = path.join('./uploads', uniqueFileName);
 
-            if (result.length < 5) {
-                var fileId = result[i].id;
+            fs.writeFile(imagePath, base64Data, 'base64', (err) => {
+                if (err) {
+                    console.error('Error writing image file:', err);
+                    return res
+                        .status(500)
+                        .json({
+                            success: false,
+                            status: "Something went wrong: " + err,
+                        });
+                } else {
+                    console.log('Image file saved:', imagePath);
+                    if (result.length < 5) {
 
-                fs.writeFile(imagePath, base64Data, 'base64', (err) => {
-                    if (err) {
-                        console.error('Error writing image file:', err);
-                        return res
-                            .status(500)
-                            .json({
-                                success: false,
-                                status: "Something went wrong: " + err,
-                            });
-                    } else {
-                        console.log('Image file saved:', imagePath);
-
+                        result.push({ path: imagePath.replace("uploads\\", "") });
                         connection.query(
                             'INSERT INTO `user_document_details_master` (userId, docType, docPath, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?)', [id, '1', imagePath, id, id],
                             function (err, results) {
                                 if (err) {
                                     console.log(err.message);
-
+                                    result.pop();
                                     reject(err);
                                 };
 
@@ -111,18 +111,11 @@ async function uploadPhoto(id, imageList, result, res) {
                                 responseData.push({ path: imagePath.replace("uploads\\", "") });
                                 resolve();
                             });
-                    }
-                });
-            } else {
-                fs.writeFile(imagePath, base64Data, 'base64', (err) => {
-                    if (err) {
-                        console.error('Error writing image file:', err);
-                        reject(err);
-                    } else {
-                        console.log('Image file saved:', imagePath);
-                        
 
-                        var db = connection.query(
+
+                    } else {
+                        var fileId = result[extra].id;
+                        let q = connection.query(
                             'UPDATE `user_document_details_master` SET docPath=?, updatedBy=? WHERE id=?', [imagePath, id, fileId],
                             function (err, results) {
                                 if (err) {
@@ -132,14 +125,17 @@ async function uploadPhoto(id, imageList, result, res) {
                                 };
 
                                 console.log("Number of records updated: " + fileId + " : " + results.affectedRows);
+                                console.log(imagePath);
                                 responseData.push({ path: imagePath.replace("uploads\\", "") });
+                                result[extra-1].docPath = imagePath.replace("uploads\\", "");
                                 resolve();
                             });
+                            extra++;
 
-                        console.log(db.sql);
+                        console.log(q.sql);
                     }
-                });
-            }
+                }
+            });
         }));
     }
 
@@ -147,6 +143,13 @@ async function uploadPhoto(id, imageList, result, res) {
         if (promises.length > 0) {
             await Promise.all(promises);
             console.log("Document/upload: Returning result");
+            responseData = [];
+
+            result.forEach(doc => {
+                console.log(doc);
+                responseData.push({ path: doc.docPath.replace("uploads\\", "") });
+            });
+
             res.status(200).json({
                 success: true,
                 data: responseData,

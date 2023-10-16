@@ -811,80 +811,21 @@ async function executeFilterQueries(req, res) {
     let responseData = [];
     let userId = [];
 
+    let query = "";
+
     if ("fromHeight" in req.body && "toHeight" in req.body) {
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_basic_details_master` WHERE (`height` >= ? AND `height`<=?) AND height <> ''",
-                    [req.body.fromHeight, req.body.toHeight],
-                    function (err, userResult, fields) {
-                        if (err) {
-                            reject(err);
-                        } else if (userResult.length > 0) {
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
-
-                            resolve();
-
-                        } else {
-                            resolve();
-                        }
-                    }
-                );
-            })
-        );
+        query += " AND (`basic`.`height` >= " + req.body.fromHeight + " AND `basic`.`height`<=" + req.body.toHeight + ") ";
     }
 
     if ("fromWeight" in req.body && "toWeight" in req.body) {
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_basic_details_master` WHERE (`weight` >= ? AND `weight`<=?) AND `weight` <> '' ",
-                    [req.body.fromWeight, req.body.toWeight],
-                    function (err, userResult, fields) {
-                        if (err) {
-                            reject(err);
-                        } else if (userResult.length > 0) {
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
-
-                            resolve();
-                        } else {
-                            resolve();
-                        }
-                    }
-                );
-            })
-        );
+        query += " AND (`weight` >= " + req.body.fromWeight + " AND `weight`<=" + req.body.toWeight + ") ";
     }
 
 
     if ("location" in req.body) {
         if (req.body.locations != "" || req.body.locations != null || req.body.locations != undefined) {
             let locations = req.body.location;
-
-            promises.push(
-                new Promise((resolve, reject) => {
-                    connection.query(
-                        "SELECT `userId` FROM `user_address_details_master` WHERE `city` IN (?) AND city <> ''",
-                        [locations],
-                        function (err, userResult, fields) {
-                            if (err) reject(err);
-                            else if (userResult.length > 0) {
-                                userResult.forEach((element) => {
-                                    userId.push(element.userId);
-                                });
-
-                                resolve();
-                            } else {
-                                resolve();
-                            }
-                        }
-                    );
-                })
-            );
+            query += " AND `city` IN (" + locations + ") ";
         }
     }
 
@@ -894,26 +835,7 @@ async function executeFilterQueries(req, res) {
             req.body.religion != null ||
             req.body.religion != undefined
         ) {
-            promises.push(
-                new Promise((resolve, reject) => {
-                    connection.query(
-                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `religion` = ? AND religion <> ''",
-                        [req.body.religion],
-                        function (err, userResult, fields) {
-                            if (err) reject(err);
-                            else if (userResult.length > 0) {
-                                userResult.forEach((element) => {
-                                    userId.push(element.userId);
-                                });
-
-                                resolve();
-                            } else {
-                                resolve();
-                            }
-                        }
-                    );
-                })
-            );
+            query += " AND `religion` = " + req.body.religion;
         }
     }
 
@@ -923,26 +845,7 @@ async function executeFilterQueries(req, res) {
             req.body.maritalStatus != null ||
             req.body.maritalStatus != undefined
         ) {
-            promises.push(
-                new Promise((resolve, reject) => {
-                    connection.query(
-                        "SELECT `userId` FROM `user_personal_details_master` WHERE `marriageType` = ? AND marriageType <> ''",
-                        [req.body.maritalStatus],
-                        function (err, userResult, fields) {
-                            if (err) reject(err);
-                            else if (userResult.length > 0) {
-                                userResult.forEach((element) => {
-                                    userId.push(element.userId);
-                                });
-
-                                resolve();
-                            } else {
-                                resolve();
-                            }
-                        }
-                    );
-                })
-            );
+            query += " AND `marriageType` = " + req.body.maritalStatus;
         }
     }
 
@@ -952,28 +855,7 @@ async function executeFilterQueries(req, res) {
             req.body.casteSubcaste != null ||
             req.body.casteSubcaste != undefined
         ) {
-            promises.push(
-                new Promise((resolve, reject) => {
-                    let a = req.body.casteSubcaste;
-
-                    connection.query(
-                        "SELECT `userId` FROM `user_kundali_details_master` WHERE `caste` = ? AND caste <> ''",
-                        [a],
-                        function (err, userResult, fields) {
-                            if (err) reject(err);
-                            else if (userResult.length > 0) {
-                                userResult.forEach((element) => {
-                                    userId.push(element.userId);
-                                });
-
-                                resolve();
-                            } else {
-                                resolve();
-                            }
-                        }
-                    );
-                })
-            );
+            query += " AND `caste` = " + req.body.casteSubcaste;
         }
     }
 
@@ -983,232 +865,76 @@ async function executeFilterQueries(req, res) {
             req.body.motherTongue != null ||
             req.body.motherTongue != undefined
         ) {
-            promises.push(
-                new Promise((resolve, reject) => {
-                    connection.query(
-                        "SELECT `userId` FROM `user_personal_details_master` WHERE `motherTongue` = ? AND motherTongue <> ''",
-                        [req.body.motherTongue],
-                        function (err, userResult, fields) {
-                            if (err) reject(err);
-                            else if (userResult.length > 0) {
-                                userResult.forEach((element) => {
-                                    userId.push(element.userId);
-                                });
-
-                                resolve();
-                            } else {
-                                resolve();
-                            }
-                        }
-                    );
-                })
-            );
-        }
-    }
-
-    if ("fromAge" in req.body) {
-        if (
-            req.body.fromAge != "" ||
-            req.body.fromAge != null ||
-            req.body.fromAge != undefined
-        ) {
-            promises.push(
-                new Promise((resolve, reject) => {
-                    connection.query(
-                        "SELECT `userId`, (DATEDIFF(SYSDATE(), dateOfBirth)/365) AS age FROM `user_basic_details_master` WHERE ((DATEDIFF(SYSDATE(), dateOfBirth)/365) >= ? AND (DATEDIFF(SYSDATE(), dateOfBirth)/365) <= ?) AND dateOfBirth <> ''",
-                        [(req.body.fromAge + 17), (req.body.toAge + 17)],
-                        function (err, userResult, fields) {
-                            if (err) reject(err);
-                            else if (userResult.length > 0) {
-                                userResult.forEach((element) => {
-                                    userId.push(element.userId);
-                                });
-
-                                resolve();
-                            } else {
-                                resolve();
-                            }
-                        }
-                    );
-                })
-            );
+            query += " AND `motherTongue` = " + req.body.motherTongue;
         }
     }
 
     if ("graduation" in req.body) {
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query(
-                    'SELECT `userId` FROM `user_educational_details_master` WHERE (educationType="grad" OR educationType="postGrad") AND ((qualification = ? OR stream = ?) OR (qualification = ?))',
-                    [req.body.graduation, req.body.stream, req.body.postGraduation],
-                    function (err, userResult, fields) {
-                        if (err) reject(err);
-                        else if (userResult.length > 0) {
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
-
-                            resolve();
-                        } else {
-                            resolve();
-                        }
-                    }
-                );
-            })
-        );
+        query += " AND qualification = " + req.body.graduation;
     }
 
     if ("income" in req.body) {
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_professional_details_master` WHERE incomeRange = ? AND incomerange <> ''",
-                    [req.body.income],
-                    function (err, userResult, fields) {
-                        if (err) reject(err);
-                        else if (userResult.length > 0) {
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
-
-                            resolve();
-                        } else {
-                            resolve();
-                        }
-                    }
-                );
-            })
-        );
+        query += " AND incomeRange = " + req.body.income;
     }
 
     if ("houseType" in req.body) {
         let h = req.body.houseType;
-
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_additional_details_master` WHERE houseType = ? AND houseType <> ''",
-                    [h],
-                    function (err, userResult, fields) {
-                        if (err) reject(err);
-                        else if (userResult.length > 0) {
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
-
-                            resolve();
-                        } else {
-                            resolve();
-                        }
-                    }
-                );
-            })
-        );
+        query += " AND houseType = " + h;
     }
 
     if ("dietType" in req.body) {
         let h = req.body.dietType;
-
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_additional_details_master` WHERE foodType = ? AND foodType <> ''",
-                    [h],
-                    function (err, userResult, fields) {
-                        if (err) reject(err);
-                        else if (userResult.length > 0) {
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
-
-                            resolve();
-                        } else {
-                            resolve();
-                        }
-                    }
-                );
-            })
-        );
+        query += " AND foodType = " + h;
     }
 
     if ("alcoholic" in req.body || "smoking" in req.body) {
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_medical_details_master` WHERE (alcoholic = ? AND smoking = ? ) AND alcoholic <> '' AND smoking <> ''",
-                    [req.body.alcoholic, req.body.smoking],
-                    function (err, userResult, fields) {
-                        if (err) reject(err);
-                        else if (userResult.length > 0) {
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
-
-                            resolve();
-                        } else {
-                            resolve();
-                        }
-                    }
-                );
-            })
-        );
+        query += " AND (alcoholic = " + req.body.alcoholic + " AND smoking = " + req.body.smoking + " )";
     }
 
     if ("medical" in req.body) {
         let m = req.body.medical.split(",");
-
-        promises.push(
-            new Promise((resolve, reject) => {
-                connection.query(
-                    "SELECT `userId` FROM `user_medical_details_master` WHERE medicalHistory IN (?) AND medicalHistory <> ''",
-                    [m],
-                    function (err, userResult, fields) {
-                        if (err) reject(err);
-                        else if (userResult.length > 0) {
-                            userResult.forEach((element) => {
-                                userId.push(element.userId);
-                            });
-
-                            resolve();
-                        } else {
-                            resolve();
-                        }
-                    }
-                );
-            })
-        );
+        query += " AND medicalHistory IN (" + m + ")";
     }
 
+
     try {
-        await Promise.all(promises);
+        // await Promise.all(promises);
 
-        if (userId.length > 0)
-            connection.query(
-                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN (?) AND personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?)",
-                [userId, req.body.userId],
-                function (err, results, fields) {
-                    if (err) {
-                        return res.status(400).json({
-                            success: false,
-                            status: err.message,
-                        });
-                    }
+        let q = "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` LEFT JOIN `user_educational_details_master` `education` ON `users`.`id` = `education`.`userId` LEFT JOIN `user_professional_details_master` `professional` ON `users`.`id` = `professional`.`userId` LEFT JOIN `user_additional_details_master` `additional` ON `users`.`id` = `additional`.`userId` LEFT JOIN `user_medical_details_master` `medical` ON `users`.`id` = `medical`.`userId` WHERE personal.gender <> (SELECT gender FROM user_personal_details_master WHERE userId=?) " + query;
 
-                    if (results.length > 0) {
-                        responseData = checkDuplicateResponse(
-                            results,
-                            responseData
-                        );
-                    }
-
-                    console.log("Filter Response size: ", responseData.length);
-
-                    return res.status(200).json({
-                        success: true,
-                        data: responseData,
+        connection.query(q, [req.body.userId],
+            function (err, results, fields) {
+                if (err) {
+                    return res.status(400).json({
+                        success: false,
+                        status: err.message,
                     });
                 }
-            );
+
+                let r = [];
+                if (results.length > 0) {
+                    responseData = checkDuplicateResponse(
+                        results,
+                        responseData
+                    );
+
+                    responseData.forEach(profile => {
+                        console.log(profile);
+                        let age = common.calculateAge(profile.dateOfBirth);
+
+                        if (age >= (req.body.fromAge + 17) && age <= (req.body.toAge + 17))
+                            r.push(profile);
+                    });
+                }
+
+                console.log("Filter Response size: ", r.length);
+
+                return res.status(200).json({
+                    success: true,
+                    data: r,
+                });
+            }
+        );
     } catch (err) {
         console.log("Err: ", err.message);
         res.status(400).json({
