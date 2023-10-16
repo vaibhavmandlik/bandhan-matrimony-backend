@@ -83,34 +83,9 @@ async function uploadPhoto(id, imageList, result, res) {
             const uniqueFileName = `${Date.now().toString()}_${id}${fileExtension}`;
             const imagePath = path.join('./uploads', uniqueFileName);
 
-            if (i < result.length) {
+            if (result.length < 5) {
                 var fileId = result[i].id;
 
-                fs.writeFile(imagePath, base64Data, 'base64', (err) => {
-                    if (err) {
-                        console.error('Error writing image file:', err);
-                        reject(err);
-                    } else {
-                        console.log('Image file saved:', imagePath);
-
-                        var db = connection.query(
-                            'UPDATE `user_document_details_master` SET docPath=?, updatedBy=? WHERE id=?', [imagePath, id, fileId],
-                            function (err, results) {
-                                if (err) {
-                                    console.log(err.message);
-
-                                    reject(err);
-                                };
-
-                                console.log("Number of records updated: " + fileId + " : " + results.affectedRows);
-                                responseData.push({ path: imagePath.replace("uploads\\", "") });
-                                resolve();
-                            });
-
-                        console.log(db.sql);
-                    }
-                });
-            } else {
                 fs.writeFile(imagePath, base64Data, 'base64', (err) => {
                     if (err) {
                         console.error('Error writing image file:', err);
@@ -136,6 +111,32 @@ async function uploadPhoto(id, imageList, result, res) {
                                 responseData.push({ path: imagePath.replace("uploads\\", "") });
                                 resolve();
                             });
+                    }
+                });
+            } else {
+                fs.writeFile(imagePath, base64Data, 'base64', (err) => {
+                    if (err) {
+                        console.error('Error writing image file:', err);
+                        reject(err);
+                    } else {
+                        console.log('Image file saved:', imagePath);
+                        
+
+                        var db = connection.query(
+                            'UPDATE `user_document_details_master` SET docPath=?, updatedBy=? WHERE id=?', [imagePath, id, fileId],
+                            function (err, results) {
+                                if (err) {
+                                    console.log(err.message);
+
+                                    reject(err);
+                                };
+
+                                console.log("Number of records updated: " + fileId + " : " + results.affectedRows);
+                                responseData.push({ path: imagePath.replace("uploads\\", "") });
+                                resolve();
+                            });
+
+                        console.log(db.sql);
                     }
                 });
             }
