@@ -97,7 +97,7 @@ async function uploadPhoto(id, imageList, result, res) {
                     console.log('Image file saved:', imagePath);
                     if (result.length < 5) {
 
-                        result.push({ path: imagePath.replace("uploads\\", "") });
+                        result.push({ docPath: imagePath.replace("uploads\\", "") });
                         connection.query(
                             'INSERT INTO `user_document_details_master` (userId, docType, docPath, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?)', [id, '1', imagePath, id, id],
                             function (err, results) {
@@ -127,10 +127,10 @@ async function uploadPhoto(id, imageList, result, res) {
                                 console.log("Number of records updated: " + fileId + " : " + results.affectedRows);
                                 console.log(imagePath);
                                 responseData.push({ path: imagePath.replace("uploads\\", "") });
-                                result[extra-1].docPath = imagePath.replace("uploads\\", "");
+                                result[extra - 1].docPath = imagePath.replace("uploads\\", "");
                                 resolve();
                             });
-                            extra++;
+                        extra++;
 
                         console.log(q.sql);
                     }
@@ -146,7 +146,7 @@ async function uploadPhoto(id, imageList, result, res) {
             responseData = [];
 
             result.forEach(doc => {
-                console.log(doc);
+                console.log("Doc: ", doc);
                 responseData.push({ path: doc.docPath.replace("uploads\\", "") });
             });
 
