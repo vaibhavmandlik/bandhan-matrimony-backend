@@ -494,7 +494,7 @@ router.get("/interest", function (req, res, next) {
                                     );
                                 }
 
-                                interestSent = responseData;
+                                interestReceived = responseData;
 
                                 resolve();
                             }
