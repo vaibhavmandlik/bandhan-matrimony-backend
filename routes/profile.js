@@ -791,7 +791,7 @@ router.post("/filter", function (req, res, next) {
                                 });
                             }
 
-                            if (results.length > 0) {   
+                            if (results.length > 0) {
                                 let responseData = []
 
                                 if (results.length > 0) {
@@ -924,20 +924,22 @@ async function executeFilterQueries(req, res) {
                     });
                 }
 
-                let r = [];
+                let r = responseData;
                 if (results.length > 0) {
                     responseData = checkDuplicateResponse(
                         results,
                         responseData
                     );
 
-                    responseData.forEach(profile => {
-                        console.log(profile);
-                        let age = common.calculateAge(profile.dateOfBirth);
 
-                        if (age >= (req.body.fromAge + 17) && age <= (req.body.toAge + 17))
-                            r.push(profile);
-                    });
+                    if ("fromAge" in req.body && "toAge" in req.body)
+                        responseData.forEach(profile => {
+                            console.log(profile);
+                            let age = common.calculateAge(profile.dateOfBirth);
+
+                            if (age >= (req.body.fromAge + 17) && age <= (req.body.toAge + 17))
+                                r.push(profile);
+                        });
                 }
 
                 console.log("Filter Response size: ", r.length);
