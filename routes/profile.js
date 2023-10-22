@@ -423,8 +423,8 @@ router.get("/interest", function (req, res, next) {
                                     );
 
                                     if (interestRequest.length > 0) {
-                                        m.isAccepted = interestRequest[0].isAccepted;
-                                        m.interestId = interestRequest[0].id;
+                                        m.isAccepted = interestRequest[0].maxIsAccepted;
+                                        m.interestId = interestRequest[0].maxId;
                                     }
 
                                     return m;
