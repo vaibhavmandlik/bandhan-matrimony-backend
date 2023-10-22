@@ -423,8 +423,8 @@ router.get("/interest", function (req, res, next) {
                                     );
 
                                     if (interestRequest.length > 0) {
-                                        m.isAccepted = interestRequest[0].isAccepted;
-                                        m.interestId = interestRequest[0].id;
+                                        m.isAccepted = interestRequest[0].maxIsAccepted;
+                                        m.interestId = interestRequest[0].maxId;
                                     }
 
                                     return m;
@@ -791,10 +791,18 @@ router.post("/filter", function (req, res, next) {
                                 });
                             }
 
-                            if (results.length > 0) {
+                            if (results.length > 0) {   
+                                let responseData = []
+
+                                if (results.length > 0) {
+                                    responseData = checkDuplicateResponse(
+                                        results,
+                                        responseData
+                                    );
+                                }
                                 return res.status(200).json({
                                     success: true,
-                                    data: results,
+                                    data: responseData,
                                 });
                             }
                         }
@@ -831,11 +839,6 @@ async function executeFilterQueries(req, res) {
     if ("fromHeight" in req.body && "toHeight" in req.body) {
         query += " AND (`basic`.`height` >= " + req.body.fromHeight + " AND `basic`.`height`<=" + req.body.toHeight + ") ";
     }
-
-    if ("fromWeight" in req.body && "toWeight" in req.body) {
-        query += " AND (`weight` >= " + req.body.fromWeight + " AND `weight`<=" + req.body.toWeight + ") ";
-    }
-
 
     if ("location" in req.body) {
         if (req.body.locations != "" || req.body.locations != null || req.body.locations != undefined) {
@@ -890,11 +893,6 @@ async function executeFilterQueries(req, res) {
 
     if ("income" in req.body) {
         query += " AND incomeRange = " + req.body.income;
-    }
-
-    if ("houseType" in req.body) {
-        let h = req.body.houseType;
-        query += " AND houseType = " + h;
     }
 
     if ("dietType" in req.body) {
