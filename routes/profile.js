@@ -840,75 +840,56 @@ async function executeFilterQueries(req, res) {
         query += " AND (`basic`.`height` >= " + req.body.fromHeight + " AND `basic`.`height`<=" + req.body.toHeight + ") ";
     }
 
-    if ("location" in req.body) {
-        if (req.body.locations != "" || req.body.locations != null || req.body.locations != undefined) {
-            let locations = req.body.location;
-            query += " AND `city` IN (" + locations + ") ";
-        }
+    if ("location" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.locations)) {
+        let locations = req.body.location;
+        query += locations == 1 ? " AND `currentCity` <> ''" : " AND `currentCity` IN (" + locations + ") ";
     }
 
-    if ("religion" in req.body) {
-        if (
-            req.body.religion != "" ||
-            req.body.religion != null ||
-            req.body.religion != undefined
-        ) {
-            query += " AND `religion` = " + req.body.religion;
-        }
+    if ("religion" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.religion)) {
+        query += " AND `religion` = " + req.body.religion;
     }
 
-    if ("maritalStatus" in req.body) {
-        if (
-            req.body.maritalStatus != "" ||
-            req.body.maritalStatus != null ||
-            req.body.maritalStatus != undefined
-        ) {
-            query += " AND `marriageType` = " + req.body.maritalStatus;
-        }
+    if ("maritalStatus" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.maritalStatus)) {
+        query += req.body.maritalStatus == 1 ? " AND `marriageType` <> ''" : " AND `marriageType` = " + req.body.maritalStatus;
     }
 
-    if ("casteSubcaste" in req.body) {
-        if (
-            req.body.casteSubcaste != "" ||
-            req.body.casteSubcaste != null ||
-            req.body.casteSubcaste != undefined
-        ) {
-            query += " AND `caste` = " + req.body.casteSubcaste;
-        }
+    if ("casteSubcaste" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.casteSubcaste)) {
+        query += req.body.casteSubcaste == 1 ? " AND `caste` <> ''" : " AND `caste` = " + req.body.casteSubcaste;
     }
 
-    if ("motherTongue" in req.body) {
-        if (
-            req.body.motherTongue != "" ||
-            req.body.motherTongue != null ||
-            req.body.motherTongue != undefined
-        ) {
-            query += " AND `motherTongue` = " + req.body.motherTongue;
-        }
+    if ("motherTongue" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.motherTongue)) {
+        query += req.body.motherTongue ? " AND `motherTongue` <> ''" : " AND `motherTongue` = " + req.body.motherTongue;
     }
 
-    if ("graduation" in req.body) {
-        query += " AND qualification = " + req.body.graduation;
+    if ("graduation" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.graduation)) {
+        query += req.body.graduation ? " AND qualification <> ''" : " AND qualification = " + req.body.graduation;
     }
 
-    if ("income" in req.body) {
-        query += " AND incomeRange = " + req.body.income;
+    if ("income" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.income)) {
+        query += req.body.income ? " AND incomeRange <> ''" : " AND incomeRange = " + req.body.income;
     }
 
-    if ("dietType" in req.body) {
+    if ("houseType" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.houseType)) {
+        query += req.body.houseType ? " AND houseType <> ''" : " AND houseType = " + req.body.houseType;
+    }
+
+    if ("dietType" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.dietType)) {
         let h = req.body.dietType;
-        query += " AND foodType = " + h;
+        query += h == 1 ? " AND foodType <> ''" : " AND foodType = " + h;
     }
 
-    if ("alcoholic" in req.body || "smoking" in req.body) {
-        query += " AND (alcoholic = " + req.body.alcoholic + " AND smoking = " + req.body.smoking + " )";
+    if ("alcoholic" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.alcoholic)) {
+        query += " AND alcoholic = " + req.body.alcoholic;
     }
 
-    if ("medical" in req.body) {
+    if ("smoking" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.smoking)) {
+        query += " AND smoking = " + req.body.smoking;
+    }
+
+    if ("medical" in req.body && common.isNotNullOrEmptyOrUndefined(req.body.medical)) {
         let m = req.body.medical.split(",");
         query += " AND medicalHistory IN (" + m + ")";
     }
-
 
     try {
         // await Promise.all(promises);
