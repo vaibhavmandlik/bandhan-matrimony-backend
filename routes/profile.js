@@ -283,7 +283,7 @@ router.post("/shortlisted", function (req, res, next) {
     connection.query(sql, values, function (err, result) {
         if (err) response.error = err;
         else {
-            console.log("Number of records Inserted: " + result.affectedRows);
+            console.log("Number of records Inserted in shortlisted: " + result.affectedRows);
 
             user.id = result.insertId;
             response.user = user;
@@ -299,7 +299,7 @@ router.get("/shortlisted", function (req, res, next) {
     let user = Number(req.query.id);
 
     connection.query(
-        'SELECT `userId` FROM `user_shortlisted_details_master` WHERE enabled="1" AND `userId`=?',
+        'SELECT `shortlistedId` FROM `user_shortlisted_details_master` WHERE enabled="1" AND `userId`=?',
         [user],
         function (err, results, fields) {
             if (err)
@@ -316,13 +316,13 @@ router.get("/shortlisted", function (req, res, next) {
 
             let shortlisted = [];
             results.forEach((element) => {
-                shortlisted.push(element.userId);
+                shortlisted.push(element.shortlistedId);
             });
 
             connection.query(
-                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` WHERE (udm.enabled = '1' AND udm.docType = '1') OR (udm.enabled = '1' AND udm.docType IS NULL) AND `users`.`id` IN (?)",
+                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `basic`.`dateOfBirth`, `address`.`city`, `kundali`.`caste`, `personal`.`gender`, (SELECT `docPath` FROM `user_document_details_master` WHERE `userId` = `users`.`id` AND `enabled` = '1' AND `docType` = '1' LIMIT 1) AS `docPath`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` AND `basic`.`enabled` = '1' LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` AND `address`.`enabled` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` AND `kundali`.`enabled` = '1' LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` AND `personal`.`enabled` = '1' LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId`  WHERE `users`.`id` IN  (?)",
                 [shortlisted],
-                function (err, results, fields) {
+                function (err, result, fields) {
                     if (err) {
                         return res.status(500).json({
                             success: false,
@@ -330,9 +330,17 @@ router.get("/shortlisted", function (req, res, next) {
                         });
                     }
 
+                    let responseData = [];
+                    if (result.length > 0) {
+                        responseData = checkDuplicateResponse(
+                            result,
+                            responseData
+                        );
+                    }
+
                     return res.status(200).json({
                         success: true,
-                        data: results,
+                        data: responseData,
                     });
                 }
             );
@@ -341,8 +349,8 @@ router.get("/shortlisted", function (req, res, next) {
 });
 
 router.delete("/shortlisted", function (req, res, next) {
-    const id = req.query.id;
-    const sid = req.query.sid;
+    const id = req.query.userId;
+    const sid = req.query.shortlistedId;
 
     var sql =
         'SELECT * FROM `user_shortlisted_details_master` WHERE userId=? AND shortlistedId=? AND enabled="1"';
@@ -1737,7 +1745,27 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                     function (err, result) {
                         if (err) reject(err);
                         else if (result.length > 0)
+                            console.log("Number of records insrted in visitor: " + result.length);
+
+                        resolve();
+                    }
+                );
+            })
+        );
+
+        promises.push(
+            new Promise((resolve, reject) => {
+                connection.query(
+                    "SELECT * FROM user_shortlisted_details_master WHERE enabled='1' AND shortlistedId=? AND userId=?",
+                    [userId, visitorId],
+                    function (err, result) {
+                        if (err) reject(err);
+                        else if (result.length > 0) {
                             console.log("Number of records insrted in shortlisted: " + result.length);
+
+                            responseData.isShortlisted = true;
+                        } else
+                            responseData.isShortlisted = false;
 
                         resolve();
                     }
@@ -1769,43 +1797,37 @@ async function getProfileData(req, res, responseData, userId, visitorId) {
                             if (responseData.basicDetails.weight >= pref1.fromWeight && responseData.basicDetails.weight <= pref1.toWeight)
                                 matches.push("Weight");
 
-                            if (responseData.addressDetails.currentCity == pref1.location)
+                            if ((responseData.addressDetails.currentCity == pref1.location) || pref1.location == 1)
                                 matches.push("Location");
 
-                            if (responseData.personalDetails.marriageType == pref1.maritalStatus)
+                            if ((responseData.personalDetails.marriageType == pref1.maritalStatus) || pref1.maritalStatus == 1)
                                 matches.push("Marital Status");
 
                             if (responseData.kundaliDetails.religion == pref1.religion)
                                 matches.push("Religion");
 
-                            if (responseData.kundaliDetails.caste == pref1.casteSubcaste)
+                            if ((responseData.kundaliDetails.caste == pref1.casteSubcaste) || pref1.casteSubcaste == 1)
                                 matches.push("Caste");
 
-                            if (responseData.personalDetails.motherTongue == pref1.motherTongue)
+                            if ((responseData.personalDetails.motherTongue == pref1.motherTongue) || pref1.motherTongue == 1)
                                 matches.push("Mother Tongue");
 
-                            if (Object.keys(responseData.educationalDetails).length > 0 && responseData.educationalDetails.filter(e => e.qualification == pref1.education).length > 0)
+                            if (Object.keys(responseData.educationalDetails).length > 0 && (responseData.educationalDetails.filter(e => e.qualification == pref1.education).length > 0 || pref1.education == 1))
                                 matches.push("Education");
 
-                            if (responseData.professionalDetails.designation == pref1.designation)
-                                matches.push("Work Type");
-
-                            if (responseData.professionalDetails.incomeRange == pref1.income)
+                            if ((responseData.professionalDetails.incomeRange == pref1.income) || pref1.income == 1)
                                 matches.push("Income");
 
-                            if (responseData.personalDetails.familyType == pref1.familyType)
-                                matches.push("Family Type");
-
-                            if (responseData.additionalDetails.houseType == pref1.houseType)
+                            if ((responseData.additionalDetails.houseType == pref1.houseType) || pref1.houseType == 1)
                                 matches.push("House Type");
 
-                            if (responseData.additionalDetails.foodType == pref1.foodType)
+                            if ((responseData.additionalDetails.foodType == pref1.foodType) || pref1.foodType == 1)
                                 matches.push("Diet Type");
 
-                            if (responseData.medicalDetails.alcoholic == pref1.alcoholic)
+                            if ((responseData.medicalDetails.alcoholic == pref1.alcoholic) || pref1.alcoholic == 1)
                                 matches.push("Alcohol");
 
-                            if (responseData.medicalDetails.smoking == pref1.smoking)
+                            if ((responseData.medicalDetails.smoking == pref1.smoking) || pref1.smoking == 1)
                                 matches.push("Smoking");
 
                             responseData.pref = matches;
