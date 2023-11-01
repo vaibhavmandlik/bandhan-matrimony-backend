@@ -27,7 +27,6 @@ var response = {
     professionalDetails: {},
 };
 
-
 router.delete("/", function (req, res, next) {
     var user = Number(req.query.id);
 
@@ -843,7 +842,7 @@ async function executeFilterQueries(req, res) {
     let userId = [];
 
     let query = "";
-
+    
     if ("fromHeight" in req.body && "toHeight" in req.body) {
         query += " AND (`basic`.`height` >= " + req.body.fromHeight + " AND `basic`.`height`<=" + req.body.toHeight + ") ";
     }

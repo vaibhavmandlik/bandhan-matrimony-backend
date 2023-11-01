@@ -50,6 +50,7 @@ router.post("/", function (req, res, next) {
 
 async function saveUserData(res, result, user) {
   const promises = [];
+  const charSet = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   promises.push(new Promise((resolve, reject) => {
     connection.query("INSERT INTO user_personal_details_master (userId, gender) VALUES (?, ?)", [result.insertId, user.personalDetails.gender], function (err, result) {
@@ -86,7 +87,7 @@ async function saveUserData(res, result, user) {
 
   while (!isUserCodeVerified) {
     userCode = common.userCodeGenerator(
-      "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      charSet,
       5
     );
     isUserCodeVerified = await verifyUserCode(userCode);
@@ -94,10 +95,11 @@ async function saveUserData(res, result, user) {
 
   let token;
   const userToken = {};
+  let profilePhoto = null
 
   promises.push(new Promise((resolve, reject) => {
     let refferCode = common.userCodeGenerator(
-      "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      charSet,
       5
     );
 
@@ -112,8 +114,9 @@ async function saveUserData(res, result, user) {
         userToken.name = user.firstName;
         userToken.referCode = refferCode;
         userToken.userCode = userCode;
-        userToken.profile = null;
         userToken.gender = user.personalDetails.gender;
+
+        profilePhoto = common.isNotNullOrEmptyOrUndefined(element.docPath) ? String(element.docPath).split("uploads\/")[1] : null;
 
         try {
           //Creating jwt token
@@ -134,6 +137,7 @@ async function saveUserData(res, result, user) {
       success: true,
       data: {
         userId: userToken.id,
+        profilePhoto: profilePhoto,
         token: token,
       },
     });

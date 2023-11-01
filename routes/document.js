@@ -4,7 +4,6 @@ var router = express.Router();
 const fs = require('fs');
 const path = require('path');
 
-
 router.post('/upload', async function (req, res, next) {
     var uploadData = req.body;
     var imageList = [];
