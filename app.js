@@ -3,6 +3,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 var authInterceptor = require('./services/authInterceptor');
+var cron = require('node-cron');
 
 var usersRouter = require('./routes/users');
 var loginRouter = require('./routes/login');
@@ -14,6 +15,7 @@ var otprouter = require('./routes/otp');
 var reportrouter = require('./routes/report')
 var chatrouter = require('./routes/chat');
 var documentrouter = require('./routes/document');
+var cronJobs = require("./routes/cron");
 
 var app = express();
 
@@ -35,5 +37,17 @@ app.use('/otp', otprouter);
 app.use('/report',reportrouter);
 app.use('/chat',chatrouter);
 app.use('/document',documentrouter);
+
+// Schedule a cron job to run the task at a specific interval (every hour in this example)
+cron.schedule('0 * * * *', () => {
+    console.log('Running cron job...');
+    cronJobs.fetchDisabledFilePaths((err, dbFiles) => {
+        if (err) {
+            console.error('Error fetching file paths from database:', err);
+        } else {
+            cronJobs.deleteFilesNotInDB(dbFiles, 'uploads');
+        }
+    });
+});
 
 module.exports = app;
