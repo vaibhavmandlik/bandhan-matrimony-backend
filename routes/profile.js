@@ -842,7 +842,7 @@ async function executeFilterQueries(req, res) {
     let userId = [];
 
     let query = "";
-    
+
     if ("fromHeight" in req.body && "toHeight" in req.body) {
         query += " AND (`basic`.`height` >= " + req.body.fromHeight + " AND `basic`.`height`<=" + req.body.toHeight + ") ";
     }
@@ -912,7 +912,7 @@ async function executeFilterQueries(req, res) {
                     });
                 }
 
-                let r = responseData;
+                let r = [];
                 if (results.length > 0) {
                     responseData = checkDuplicateResponse(
                         results,
@@ -920,14 +920,14 @@ async function executeFilterQueries(req, res) {
                     );
 
 
-                    if ("fromAge" in req.body && "toAge" in req.body)
+                    if ("fromAge" in req.body && "toAge" in req.body) {
                         responseData.forEach(profile => {
-                            console.log(profile);
                             let age = common.calculateAge(profile.dateOfBirth);
 
                             if (age >= (req.body.fromAge + 17) && age <= (req.body.toAge + 17))
                                 r.push(profile);
                         });
+                    }
                 }
 
                 console.log("Filter Response size: ", r.length);
