@@ -4,6 +4,7 @@ var logger = require('morgan');
 var cors = require('cors');
 var authInterceptor = require('./services/authInterceptor');
 var cron = require('node-cron');
+var Path = require('path');
 
 var usersRouter = require('./routes/users');
 var loginRouter = require('./routes/login');
@@ -18,6 +19,9 @@ var documentrouter = require('./routes/document');
 var cronJobs = require("./routes/cron");
 
 var app = express();
+
+const publicPath = Path.join(__dirname, 'public');
+app.use(express.static(publicPath));
 
 app.use(logger('dev'));
 app.use(express.json({ limit: '50mb' }));
