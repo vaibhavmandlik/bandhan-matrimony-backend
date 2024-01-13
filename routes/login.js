@@ -11,7 +11,7 @@ router.post('/', function (req, res, next) {
 
     // simple query
     connection.query(
-        'SELECT u.*, udm.docPath, upm.gender FROM `users` u LEFT JOIN user_document_details_master udm ON (u.id=udm.userId AND udm.enabled="1") LEFT JOIN user_personal_details_master upm ON u.id=upm.userId WHERE username=? LIMIT 1', [user.username],
+        'SELECT u.*, udm.docPath, upm.gender FROM `users` u LEFT JOIN user_document_details_master udm ON (u.id=udm.userId AND udm.enabled="1") LEFT JOIN user_personal_details_master upm ON u.id=upm.userId WHERE username=? AND u.enabled="1" LIMIT 1', [user.username],
         function (err, results) {
             if (err)
                 return res
