@@ -17,7 +17,7 @@ const fetchDisabledFilePaths = (callback) => {
 
 // Function to delete files not present in the database
 const deleteFilesNotInDB = (dbFiles, directoryPath) => {
-    const mandatFiles = ["uploads\\avatar_female.png", "uploads\\avatar_male.png", "uploads\\banner1.jpeg", "uploads\\banner2.jpeg", "uploads\\banner3.jpeg"];
+    const mandatFiles = ["uploads\/avatar_female.png", "uploads\/avatar_male.png", "uploads\/banner1.jpeg", "uploads\/banner2.jpeg", "uploads\/banner3.jpeg"];
 
     fs.readdir(directoryPath, (err, files) => {
         if (err) {
