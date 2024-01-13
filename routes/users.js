@@ -46,7 +46,7 @@ router.get('/delete', function (req, res, next) {
           .status(200)
           .json({
             success: false,
-            error: "Something went wrong: " + err,
+            status: "Something went wrong: " + err,
           })
 
       if (results.affectedRows == 1) {
