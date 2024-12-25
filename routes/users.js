@@ -46,7 +46,7 @@ router.get('/delete', function (req, res, next) {
           .status(200)
           .json({
             success: false,
-            error: "Something went wrong: " + err,
+            status: "Something went wrong: " + err,
           })
 
       if (results.affectedRows == 1) {
@@ -418,6 +418,76 @@ router.put('/preferences', function (req, res, next) {
         }
         else {
           console.log("Record inserted in Preferance");
+
+          return res
+            .status(200)
+            .json({
+              success: true,
+              data: result,
+            });
+        }
+      });
+    }
+  });
+});
+
+router.post('/lastSeen', function (req, res, next) {
+  user = req.body
+  connection.query("SELECT * FROM user_lastseen_master WHERE userId=?", [user.userId], function (err, result) {
+    if (err) {
+      console.log(err);
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          status: err.message,
+        });
+    }
+    if (result.length > 0) {
+      connection.query("UPDATE user_lastseen_master SET lastSeen=? WHERE userId=?", [new Date(), user.userId], function (err, result) {
+        if (err) {
+          console.log(err);
+
+          return res
+            .status(500)
+            .json({
+              success: false,
+              status: err.message,
+            });
+        }
+        else {
+          console.log("Record Updated in Last Seen");
+
+          return res
+            .status(200)
+            .json({
+              success: true,
+              data: result,
+            });
+        }
+
+      });
+    }
+    else {
+      var sql =
+        "INSERT INTO `user_lastseen_master` (userId) VALUES (?)";
+      var values = [
+        user.userId,
+      ];
+      connection.query(sql, values, function (err, result) {
+        if (err) {
+          console.log(err);
+
+          return res
+            .status(500)
+            .json({
+              success: false,
+              status: err.message,
+            });
+        }
+        else {
+          console.log("Record inserted in Last Seen");
 
           return res
             .status(200)

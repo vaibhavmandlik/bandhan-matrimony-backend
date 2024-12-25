@@ -21,14 +21,15 @@ router.post('/', function (req, res, next) {
             user.id = result.insertId;
             response.user = user;
         }
+        
         return res
-        .status(200)
-        .json({
-            success: true,
-            data: response
-        });
-     });
-    
+            .status(200)
+            .json({
+                success: true,
+                data: response
+            });
+    });
+
 });
 
 router.get('/', function (req, res, next) {
@@ -60,7 +61,7 @@ router.get('/', function (req, res, next) {
             });
 
             connection.query(
-                'SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`height`, `basic`.`dateOfBirth`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = "1" AND `udm`.`docType` = "1" LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` WHERE `users`.`id` IN (?)', [visitors],
+                "SELECT `users`.`id`, `users`.`firstName`, `users`.`lastName`, `users`.`userCode`, `basic`.`dateOfBirth`, `basic`.`height`, `address`.`city`, `udm`.`docPath`, `kundali`.`caste`, `personal`.`gender`, `lastSeen`.`lastSeen` FROM `users` LEFT JOIN `user_basic_details_master` `basic` ON `users`.`id` = `basic`.`userId` LEFT JOIN `user_address_details_master` `address` ON `users`.`id` = `address`.`userId` LEFT OUTER JOIN `user_document_details_master` `udm` ON `users`.`id` = `udm`.`userId` AND `udm`.`enabled` = '1' AND `udm`.`docType` = '1' LEFT JOIN `user_kundali_details_master` `kundali` ON `users`.`id` = `kundali`.`userId` LEFT JOIN `user_personal_details_master` `personal` ON `users`.`id` = `personal`.`userId` LEFT JOIN `user_lastseen_master` `lastSeen` ON `users`.`id` = `lastSeen`.`userId` AND `lastSeen`.`lastSeen` = '1' WHERE `users`.`id` IN (?)", [visitors],
                 function (err, results, fields) {
                     if (err) {
                         return res
@@ -77,10 +78,64 @@ router.get('/', function (req, res, next) {
                             success: true,
                             data: results
                         });
-                })
+                });
+
+                
 
         }
     );
+
+    connection.query("SELECT * FROM user_lastseen_master WHERE userId=?", [user], function (err, result) {
+        if (err) {
+            console.log(err);
+
+            return res
+                .status(500)
+                .json({
+                    success: false,
+                    status: err.message,
+                });
+        }
+        if (result.length > 0) {
+            connection.query("UPDATE user_lastseen_master SET lastSeen=? WHERE userId=?", [new Date(), user], function (err, result) {
+                if (err) {
+                    console.log(err);
+
+                    return res
+                        .status(500)
+                        .json({
+                            success: false,
+                            status: err.message,
+                        });
+                }
+                else {
+                    console.log("Record Updated in Last Seen");
+                }
+
+            });
+        }
+        else {
+            var sql = "INSERT INTO `user_lastseen_master` (userId) VALUES (?)";
+            var values = [
+                user,
+            ];
+            connection.query(sql, values, function (err, result) {
+                if (err) {
+                    console.log(err);
+
+                    return res
+                        .status(500)
+                        .json({
+                            success: false,
+                            status: err.message,
+                        });
+                }
+                else {
+                    console.log("Record inserted in Last Seen");
+                }
+            });
+        }
+    });
 });
 
 module.exports = router;

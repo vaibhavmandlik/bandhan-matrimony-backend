@@ -11,11 +11,13 @@ router.post("/", function (req, res, next) {
     "SELECT * FROM `users` WHERE username=?",
     [user.email],
     function (err, results) {
-      if (err)
+      if (err) {
+        console.log(err);
         return res.status(500).json({
           success: false,
           status: err.message,
         });
+      }
 
       if (results.length > 0)
         return res.status(200).json({
@@ -35,6 +37,7 @@ router.post("/", function (req, res, next) {
 
       connection.query(sql, values, async function (err, result) {
         if (err) {
+          console.log(err);
           return res.status(500).json({
             success: false,
             status: err.message,
@@ -50,10 +53,14 @@ router.post("/", function (req, res, next) {
 
 async function saveUserData(res, result, user) {
   const promises = [];
+  const charSet = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   promises.push(new Promise((resolve, reject) => {
     connection.query("INSERT INTO user_personal_details_master (userId, gender) VALUES (?, ?)", [result.insertId, user.personalDetails.gender], function (err, result) {
-      if (err) reject(err);
+      if (err) {
+        console.log(err);
+        reject(err);
+      }
 
       console.log("Number of records inserted: " + result.affectedRows);
 
@@ -63,7 +70,10 @@ async function saveUserData(res, result, user) {
 
   promises.push(new Promise((resolve, reject) => {
     connection.query("INSERT INTO user_contact_master (userId, contactNumber, isPrimary) VALUES (?, ?, ?)", [result.insertId, user.contactDetails.contactNumber, user.contactDetails.isPrimary], function (err, result) {
-      if (err) reject(err);
+      if (err) {
+      console.log(err);  
+      reject(err);
+      } 
 
       console.log("Number of records inserted: " + result.affectedRows);
 
@@ -73,7 +83,10 @@ async function saveUserData(res, result, user) {
 
   promises.push(new Promise((resolve, reject) => {
     connection.query("INSERT INTO user_basic_details_master (userId, dateOfBirth) VALUES (?, ?)", [result.insertId, formatDate(user.basicDetails.dateOfBirth)], function (err, result) {
-      if (err) reject(err);
+      if (err) {
+      console.log(err);  
+      reject(err);
+      } 
 
       console.log("Number of records inserted: " + result.affectedRows);
 
@@ -86,7 +99,7 @@ async function saveUserData(res, result, user) {
 
   while (!isUserCodeVerified) {
     userCode = common.userCodeGenerator(
-      "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      charSet,
       5
     );
     isUserCodeVerified = await verifyUserCode(userCode);
@@ -94,15 +107,19 @@ async function saveUserData(res, result, user) {
 
   let token;
   const userToken = {};
+  let profilePhoto = null
 
   promises.push(new Promise((resolve, reject) => {
     let refferCode = common.userCodeGenerator(
-      "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      charSet,
       5
     );
 
     connection.query("UPDATE users SET userCode=?, refferCode=?, createdBy=?, updatedBy=? WHERE id=?", [userCode, refferCode, result.insertId, result.insertId, result.insertId,], function (err, results, fields) {
-      if (err) reject(err);
+      if (err) {
+      console.log(err);  
+      reject(err);
+      } 
 
       if (results.affectedRows > 0) {
         userToken.username = user.email;
@@ -112,8 +129,9 @@ async function saveUserData(res, result, user) {
         userToken.name = user.firstName;
         userToken.referCode = refferCode;
         userToken.userCode = userCode;
-        userToken.profile = null;
         userToken.gender = user.personalDetails.gender;
+
+        profilePhoto = common.isNotNullOrEmptyOrUndefined(element.docPath) ? String(element.docPath).split("uploads\/")[1] : null;
 
         try {
           //Creating jwt token
@@ -134,6 +152,7 @@ async function saveUserData(res, result, user) {
       success: true,
       data: {
         userId: userToken.id,
+        profilePhoto: profilePhoto,
         token: token,
       },
     });
